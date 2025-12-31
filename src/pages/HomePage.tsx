@@ -1,0 +1,364 @@
+import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Layout } from "@/components/layout/Layout";
+import { 
+  Sparkles, 
+  Leaf, 
+  Heart, 
+  Shield, 
+  ArrowRight, 
+  Brain, 
+  Activity,
+  Users,
+  MessageSquare,
+  CheckCircle
+} from "lucide-react";
+import heroBg from "@/assets/hero-bg.jpg";
+
+const fadeInUp = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0 }
+};
+
+const staggerContainer = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.1 }
+  }
+};
+
+export default function HomePage() {
+  return (
+    <Layout>
+      {/* Hero Section */}
+      <section className="relative min-h-[90vh] flex items-center overflow-hidden">
+        {/* Background */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{ backgroundImage: `url(${heroBg})` }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-background/95 via-background/80 to-transparent" />
+        
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="max-w-3xl">
+            <motion.div
+              initial="hidden"
+              animate="visible"
+              variants={staggerContainer}
+              className="space-y-6"
+            >
+              {/* Badge */}
+              <motion.div variants={fadeInUp}>
+                <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary text-secondary-foreground text-sm font-medium">
+                  <Sparkles className="w-4 h-4 text-primary" />
+                  AI-Powered Homeopathy
+                </span>
+              </motion.div>
+
+              {/* Heading */}
+              <motion.h1 
+                variants={fadeInUp}
+                className="text-4xl md:text-5xl lg:text-6xl font-display font-bold text-foreground leading-tight"
+              >
+                Natural Healing{" "}
+                <span className="text-gradient">Meets Intelligence</span>
+              </motion.h1>
+
+              {/* Subtitle */}
+              <motion.p 
+                variants={fadeInUp}
+                className="text-lg md:text-xl text-muted-foreground max-w-xl"
+              >
+                Your personal AI homeopathic consultant. Get instant, natural remedy 
+                suggestions tailored to your specific symptoms, backed by centuries 
+                of holistic wisdom.
+              </motion.p>
+
+              {/* CTA Buttons */}
+              <motion.div 
+                variants={fadeInUp}
+                className="flex flex-wrap gap-4 pt-4"
+              >
+                <Link to="/ai-treatment">
+                  <Button variant="hero" size="xl">
+                    Start AI Consultation
+                    <ArrowRight className="w-5 h-5" />
+                  </Button>
+                </Link>
+                <Link to="/diseases">
+                  <Button variant="hero-outline" size="xl">
+                    Browse Remedies
+                  </Button>
+                </Link>
+              </motion.div>
+            </motion.div>
+          </div>
+        </div>
+
+        {/* Floating Feature Card */}
+        <motion.div
+          initial={{ opacity: 0, x: 50 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.5, duration: 0.6 }}
+          className="absolute right-8 bottom-24 hidden lg:block"
+        >
+          <div className="bg-card/90 backdrop-blur-sm rounded-2xl p-6 shadow-elevated border border-border max-w-xs">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center">
+                <Heart className="w-6 h-6 text-primary" />
+              </div>
+              <div>
+                <h4 className="font-semibold text-foreground mb-1">Personalized Care</h4>
+                <p className="text-sm text-muted-foreground">
+                  Adapts to your unique symptoms and lifestyle.
+                </p>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      </section>
+
+      {/* What is Homeopathy Section */}
+      <section className="py-20 md:py-28 bg-muted/30">
+        <div className="container mx-auto px-4">
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-100px" }}
+            variants={staggerContainer}
+            className="text-center max-w-3xl mx-auto mb-16"
+          >
+            <motion.span 
+              variants={fadeInUp}
+              className="text-primary font-medium text-sm uppercase tracking-wider"
+            >
+              Understanding Homeopathy
+            </motion.span>
+            <motion.h2 
+              variants={fadeInUp}
+              className="text-3xl md:text-4xl font-display font-bold text-foreground mt-4 mb-6"
+            >
+              What is Homeopathy?
+            </motion.h2>
+            <motion.p 
+              variants={fadeInUp}
+              className="text-muted-foreground text-lg"
+            >
+              Homeopathy is a natural system of medicine that uses highly diluted substances 
+              to stimulate the body's own healing mechanisms. Founded over 200 years ago, 
+              it treats the whole person—mind, body, and spirit.
+            </motion.p>
+          </motion.div>
+
+          {/* Principles */}
+          <motion.div 
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-50px" }}
+            variants={staggerContainer}
+            className="grid grid-cols-1 md:grid-cols-3 gap-8"
+          >
+            {[
+              {
+                icon: Leaf,
+                title: "Like Cures Like",
+                description: "A substance that causes symptoms in a healthy person can cure similar symptoms in a sick person when given in minute doses."
+              },
+              {
+                icon: Activity,
+                title: "Minimum Dose",
+                description: "The smallest dose possible is used to stimulate healing, minimizing side effects while maximizing therapeutic effect."
+              },
+              {
+                icon: Brain,
+                title: "Individualized Treatment",
+                description: "Each person is treated as unique. Remedies are selected based on the totality of symptoms—physical, mental, and emotional."
+              }
+            ].map((principle, index) => (
+              <motion.div
+                key={principle.title}
+                variants={fadeInUp}
+                className="group"
+              >
+                <div className="bg-card rounded-2xl p-8 h-full shadow-card hover:shadow-elevated transition-all duration-300 border border-border group-hover:border-primary/20">
+                  <div className="w-14 h-14 rounded-xl gradient-primary flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                    <principle.icon className="w-7 h-7 text-primary-foreground" />
+                  </div>
+                  <h3 className="text-xl font-display font-semibold text-foreground mb-3">
+                    {principle.title}
+                  </h3>
+                  <p className="text-muted-foreground">
+                    {principle.description}
+                  </p>
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Benefits Section */}
+      <section className="py-20 md:py-28">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+            {/* Content */}
+            <motion.div
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              variants={staggerContainer}
+            >
+              <motion.span 
+                variants={fadeInUp}
+                className="text-primary font-medium text-sm uppercase tracking-wider"
+              >
+                Why Choose Homeopathy
+              </motion.span>
+              <motion.h2 
+                variants={fadeInUp}
+                className="text-3xl md:text-4xl font-display font-bold text-foreground mt-4 mb-6"
+              >
+                Gentle, Natural, Effective
+              </motion.h2>
+              <motion.p 
+                variants={fadeInUp}
+                className="text-muted-foreground text-lg mb-8"
+              >
+                Homeopathy offers a holistic approach to health that works with your body's 
+                natural healing abilities, not against them.
+              </motion.p>
+
+              <motion.ul variants={staggerContainer} className="space-y-4">
+                {[
+                  "Safe for all ages—from infants to elderly",
+                  "No known side effects when properly prescribed",
+                  "Treats the root cause, not just symptoms",
+                  "Works alongside conventional medicine",
+                  "Affordable and accessible remedies"
+                ].map((benefit) => (
+                  <motion.li 
+                    key={benefit}
+                    variants={fadeInUp}
+                    className="flex items-start gap-3"
+                  >
+                    <CheckCircle className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                    <span className="text-foreground">{benefit}</span>
+                  </motion.li>
+                ))}
+              </motion.ul>
+            </motion.div>
+
+            {/* Feature Cards */}
+            <motion.div
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              variants={staggerContainer}
+              className="grid grid-cols-2 gap-4"
+            >
+              {[
+                { icon: Shield, title: "Safe & Natural", value: "100%", desc: "Natural ingredients" },
+                { icon: Users, title: "Trusted By", value: "500M+", desc: "People worldwide" },
+                { icon: Activity, title: "Conditions", value: "1000+", desc: "Conditions treated" },
+                { icon: MessageSquare, title: "AI Support", value: "24/7", desc: "Always available" }
+              ].map((stat, index) => (
+                <motion.div
+                  key={stat.title}
+                  variants={fadeInUp}
+                  className={`bg-card rounded-2xl p-6 shadow-card border border-border ${
+                    index === 1 || index === 2 ? "mt-8" : ""
+                  }`}
+                >
+                  <stat.icon className="w-8 h-8 text-primary mb-4" />
+                  <div className="text-2xl font-display font-bold text-foreground mb-1">
+                    {stat.value}
+                  </div>
+                  <p className="text-sm text-muted-foreground">{stat.desc}</p>
+                </motion.div>
+              ))}
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* Trust Section */}
+      <section className="py-20 md:py-28 bg-secondary/50">
+        <div className="container mx-auto px-4">
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={staggerContainer}
+            className="text-center max-w-3xl mx-auto"
+          >
+            <motion.div variants={fadeInUp}>
+              <Shield className="w-16 h-16 text-primary mx-auto mb-6" />
+            </motion.div>
+            <motion.h2 
+              variants={fadeInUp}
+              className="text-3xl md:text-4xl font-display font-bold text-foreground mb-6"
+            >
+              Your Safety is Our Priority
+            </motion.h2>
+            <motion.p 
+              variants={fadeInUp}
+              className="text-muted-foreground text-lg mb-8"
+            >
+              Our AI provides educational information and general guidance based on homeopathic 
+              principles. We're here to complement, not replace, professional healthcare.
+            </motion.p>
+            
+            <motion.div 
+              variants={fadeInUp}
+              className="bg-card rounded-2xl p-8 shadow-card border border-border"
+            >
+              <p className="text-foreground font-medium mb-4">Medical Disclaimer</p>
+              <p className="text-muted-foreground text-sm">
+                This platform provides educational information only and does not replace professional 
+                medical advice, diagnosis, or treatment. Always consult a licensed healthcare provider 
+                before making health decisions or taking any medication.
+              </p>
+            </motion.div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-20 md:py-28">
+        <div className="container mx-auto px-4">
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={staggerContainer}
+            className="text-center"
+          >
+            <motion.h2 
+              variants={fadeInUp}
+              className="text-3xl md:text-4xl font-display font-bold text-foreground mb-6"
+            >
+              Ready to Explore Natural Healing?
+            </motion.h2>
+            <motion.p 
+              variants={fadeInUp}
+              className="text-muted-foreground text-lg mb-8 max-w-2xl mx-auto"
+            >
+              Start your journey towards holistic wellness with our AI-powered homeopathic 
+              consultation. It's free, private, and available 24/7.
+            </motion.p>
+            <motion.div variants={fadeInUp}>
+              <Link to="/ai-treatment">
+                <Button variant="hero" size="xl">
+                  Start Free Consultation
+                  <ArrowRight className="w-5 h-5" />
+                </Button>
+              </Link>
+            </motion.div>
+          </motion.div>
+        </div>
+      </section>
+    </Layout>
+  );
+}
