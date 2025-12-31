@@ -5,7 +5,7 @@ import { Layout } from "@/components/layout/Layout";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, ArrowRight, Filter, Loader2, Database } from "lucide-react";
+import { Search, ArrowRight, Filter, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface Disease {
@@ -44,6 +44,13 @@ export default function DiseasesPage() {
   useEffect(() => {
     fetchDiseases();
   }, []);
+
+  // Auto-generate diseases if less than 100 exist
+  useEffect(() => {
+    if (!isLoading && diseases.length < 100 && !isGenerating) {
+      generateDiseases();
+    }
+  }, [isLoading, diseases.length]);
 
   const fetchDiseases = async () => {
     try {
@@ -186,27 +193,11 @@ export default function DiseasesPage() {
               />
             </motion.div>
 
-            {/* Generate Button (for initial setup) */}
-            {diseases.length < 50 && (
-              <motion.div variants={fadeInUp} className="mt-6">
-                <Button
-                  onClick={generateDiseases}
-                  disabled={isGenerating}
-                  variant="secondary"
-                  size="lg"
-                >
-                  {isGenerating ? (
-                    <>
-                      <Loader2 className="w-5 h-5 animate-spin mr-2" />
-                      Generating diseases with AI...
-                    </>
-                  ) : (
-                    <>
-                      <Database className="w-5 h-5 mr-2" />
-                      Generate 100+ Diseases with AI
-                    </>
-                  )}
-                </Button>
+            {/* Auto-generation status */}
+            {isGenerating && (
+              <motion.div variants={fadeInUp} className="mt-6 flex items-center justify-center gap-2 text-muted-foreground">
+                <Loader2 className="w-5 h-5 animate-spin" />
+                <span>Generating disease database with AI... This may take a few minutes.</span>
               </motion.div>
             )}
           </motion.div>

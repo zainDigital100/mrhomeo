@@ -88,47 +88,57 @@ serve(async (req) => {
         continue;
       }
 
-      const prompt = `Generate comprehensive homeopathic health information for "${diseaseName}". 
+      const prompt = `Generate very comprehensive and detailed homeopathic health information for "${diseaseName}". 
       
+Write EXTENSIVE content with 7-10 paragraphs for each text field. Be thorough and educational.
+
 Return a JSON object with these exact fields:
 {
   "name": "${diseaseName}",
   "slug": "${diseaseName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}",
-  "summary": "A 1-2 sentence description of the condition",
-  "symptoms": ["symptom1", "symptom2", "symptom3", "symptom4"],
+  "summary": "A detailed 4-5 sentence description of the condition, covering what it is, who it affects, and its general impact on health and quality of life.",
+  "symptoms": ["symptom1", "symptom2", "symptom3", "symptom4", "symptom5", "symptom6", "symptom7", "symptom8"],
   "category": "One of: Mental Health, Neurological, Skin Conditions, Digestive, Respiratory, Musculoskeletal, Immune System, Cardiovascular, Women's Health, Men's Health, Eye & Ear, Infectious, Metabolic, Urinary",
-  "overview": "A detailed 3-4 sentence explanation of the condition",
-  "causes": ["cause1", "cause2", "cause3", "cause4", "cause5", "cause6"],
-  "early_symptoms": ["early symptom 1", "early symptom 2", "early symptom 3", "early symptom 4", "early symptom 5"],
-  "advanced_symptoms": ["advanced symptom 1", "advanced symptom 2", "advanced symptom 3", "advanced symptom 4", "advanced symptom 5"],
-  "homeopathic_perspective": "A paragraph explaining the homeopathic view of this condition",
+  "overview": "Write 7-10 detailed paragraphs (each 3-4 sentences) explaining this condition comprehensively. Cover: what the condition is, its medical classification, how common it is, risk factors, age groups affected, how it develops over time, its relationship to other conditions, the body systems involved, prognosis, and general medical understanding. Make this a complete educational article about the condition.",
+  "causes": ["Detailed cause 1 with explanation", "Detailed cause 2 with explanation", "Detailed cause 3 with explanation", "Detailed cause 4 with explanation", "Detailed cause 5 with explanation", "Detailed cause 6 with explanation", "Detailed cause 7 with explanation", "Detailed cause 8 with explanation"],
+  "early_symptoms": ["Early symptom 1 with detailed description", "Early symptom 2 with detailed description", "Early symptom 3 with detailed description", "Early symptom 4 with detailed description", "Early symptom 5 with detailed description", "Early symptom 6 with detailed description"],
+  "advanced_symptoms": ["Advanced symptom 1 with detailed description", "Advanced symptom 2 with detailed description", "Advanced symptom 3 with detailed description", "Advanced symptom 4 with detailed description", "Advanced symptom 5 with detailed description", "Advanced symptom 6 with detailed description"],
+  "homeopathic_perspective": "Write 7-10 detailed paragraphs explaining the homeopathic understanding and approach to this condition. Cover: the fundamental homeopathic principles applied, how homeopathy views the root cause vs symptoms, the concept of vital force and its role, individual constitution considerations, miasmatic understanding if relevant, the holistic approach taken, how remedy selection works, expectations for treatment, aggravations and healing responses, and the role of lifestyle in homeopathic treatment.",
   "medicines": [
     {
       "name": "Remedy Name 1",
-      "indications": "Key symptoms this remedy addresses",
-      "guidance": "General usage guidance"
+      "indications": "Write 2-3 detailed paragraphs about when this remedy is indicated, the specific symptom picture, patient constitution type, modalities (what makes it better/worse), mental and emotional symptoms, and characteristic features that distinguish this remedy.",
+      "guidance": "Detailed guidance on potency selection, dosing frequency, what to expect, duration of treatment, and signs of improvement."
     },
     {
       "name": "Remedy Name 2",
-      "indications": "Key symptoms this remedy addresses",
-      "guidance": "General usage guidance"
+      "indications": "Write 2-3 detailed paragraphs about when this remedy is indicated, the specific symptom picture, patient constitution type, modalities, mental and emotional symptoms, and characteristic features.",
+      "guidance": "Detailed guidance on potency, dosing, expectations, duration, and signs of improvement."
     },
     {
       "name": "Remedy Name 3",
-      "indications": "Key symptoms this remedy addresses",
-      "guidance": "General usage guidance"
+      "indications": "Write 2-3 detailed paragraphs about when this remedy is indicated, the specific symptom picture, patient constitution type, modalities, mental and emotional symptoms, and characteristic features.",
+      "guidance": "Detailed guidance on potency, dosing, expectations, duration, and signs of improvement."
     },
     {
       "name": "Remedy Name 4",
-      "indications": "Key symptoms this remedy addresses",
-      "guidance": "General usage guidance"
+      "indications": "Write 2-3 detailed paragraphs about when this remedy is indicated, the specific symptom picture, patient constitution type, modalities, mental and emotional symptoms, and characteristic features.",
+      "guidance": "Detailed guidance on potency, dosing, expectations, duration, and signs of improvement."
+    },
+    {
+      "name": "Remedy Name 5",
+      "indications": "Write 2-3 detailed paragraphs about when this remedy is indicated, the specific symptom picture, patient constitution type, modalities, mental and emotional symptoms, and characteristic features.",
+      "guidance": "Detailed guidance on potency, dosing, expectations, duration, and signs of improvement."
     }
   ],
-  "lifestyle_tips": ["tip1", "tip2", "tip3", "tip4", "tip5", "tip6"],
-  "when_to_consult": ["situation1", "situation2", "situation3", "situation4", "situation5"]
+  "lifestyle_tips": ["Detailed lifestyle tip 1 with explanation of why it helps", "Detailed lifestyle tip 2 with explanation", "Detailed lifestyle tip 3 with explanation", "Detailed lifestyle tip 4 with explanation", "Detailed lifestyle tip 5 with explanation", "Detailed lifestyle tip 6 with explanation", "Detailed lifestyle tip 7 with explanation", "Detailed lifestyle tip 8 with explanation"],
+  "when_to_consult": ["Detailed warning sign 1 requiring medical attention", "Detailed warning sign 2", "Detailed warning sign 3", "Detailed warning sign 4", "Detailed warning sign 5", "Detailed warning sign 6"]
 }
 
-IMPORTANT: Return ONLY the JSON object, no markdown formatting, no code blocks, no additional text.`;
+IMPORTANT: 
+- Write extensive, educational content - each overview and homeopathic_perspective should be 7-10 paragraphs long
+- Return ONLY the JSON object, no markdown formatting, no code blocks, no additional text
+- Make the content suitable for a professional medical education website`;
 
       try {
         const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
