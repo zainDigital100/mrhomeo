@@ -1,11 +1,21 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Layout } from "@/components/layout/Layout";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { diseases, searchDiseases, getDiseasesByLetter } from "@/data/diseases";
-import { Search, ArrowRight, Filter } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { Search, ArrowRight, Filter, Loader2, Database } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+
+interface Disease {
+  id: string;
+  slug: string;
+  name: string;
+  summary: string;
+  symptoms: string[];
+  category: string;
+}
 
 const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 
@@ -23,17 +33,104 @@ const staggerContainer = {
 };
 
 export default function DiseasesPage() {
+  const [diseases, setDiseases] = useState<Disease[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isGenerating, setIsGenerating] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedLetter, setSelectedLetter] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  const { toast } = useToast();
+
+  useEffect(() => {
+    fetchDiseases();
+  }, []);
+
+  const fetchDiseases = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('diseases')
+        .select('id, slug, name, summary, symptoms, category')
+        .order('name');
+
+      if (error) throw error;
+      setDiseases(data || []);
+    } catch (error) {
+      console.error('Error fetching diseases:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const generateDiseases = async () => {
+    setIsGenerating(true);
+    let batchStart = 0;
+    const batchSize = 5;
+
+    try {
+      toast({
+        title: "Generating Diseases",
+        description: "This may take a few minutes. Please wait...",
+      });
+
+      while (true) {
+        const { data, error } = await supabase.functions.invoke('generate-diseases', {
+          body: { batchStart, batchSize }
+        });
+
+        if (error) {
+          console.error('Generation error:', error);
+          throw error;
+        }
+
+        console.log('Batch result:', data);
+
+        if (data.remaining <= 0 || batchStart >= 120) {
+          break;
+        }
+
+        batchStart = data.nextBatch;
+        
+        // Refresh the list after each batch
+        await fetchDiseases();
+        
+        // Small delay between batches
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+
+      toast({
+        title: "Generation Complete",
+        description: "All diseases have been generated successfully!",
+      });
+
+      await fetchDiseases();
+    } catch (error) {
+      console.error('Error generating diseases:', error);
+      toast({
+        title: "Generation Error",
+        description: "There was an error generating diseases. Some may have been created.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   const filteredDiseases = useMemo(() => {
     let result = diseases;
 
     if (searchQuery) {
-      result = searchDiseases(searchQuery);
+      const lowercaseQuery = searchQuery.toLowerCase();
+      result = diseases.filter(
+        disease =>
+          disease.name.toLowerCase().includes(lowercaseQuery) ||
+          disease.summary.toLowerCase().includes(lowercaseQuery) ||
+          disease.symptoms.some(s => s.toLowerCase().includes(lowercaseQuery)) ||
+          disease.category.toLowerCase().includes(lowercaseQuery)
+      );
     } else if (selectedLetter) {
-      result = getDiseasesByLetter(selectedLetter);
+      result = diseases.filter(disease => 
+        disease.name.toLowerCase().startsWith(selectedLetter.toLowerCase())
+      );
     }
 
     return result.sort((a, b) => {
@@ -41,7 +138,7 @@ export default function DiseasesPage() {
         ? a.name.localeCompare(b.name)
         : b.name.localeCompare(a.name);
     });
-  }, [searchQuery, selectedLetter, sortOrder]);
+  }, [diseases, searchQuery, selectedLetter, sortOrder]);
 
   const handleLetterClick = (letter: string) => {
     setSelectedLetter(selectedLetter === letter ? null : letter);
@@ -69,7 +166,7 @@ export default function DiseasesPage() {
               variants={fadeInUp}
               className="text-lg text-muted-foreground mb-8"
             >
-              Explore our comprehensive collection of health conditions and their 
+              Explore our comprehensive collection of {diseases.length}+ health conditions and their 
               homeopathic treatments. Each article provides educational insights 
               into natural remedies.
             </motion.p>
@@ -88,6 +185,30 @@ export default function DiseasesPage() {
                 className="pl-12 h-14 rounded-2xl text-lg border-2 border-border focus:border-primary bg-card"
               />
             </motion.div>
+
+            {/* Generate Button (for initial setup) */}
+            {diseases.length < 50 && (
+              <motion.div variants={fadeInUp} className="mt-6">
+                <Button
+                  onClick={generateDiseases}
+                  disabled={isGenerating}
+                  variant="secondary"
+                  size="lg"
+                >
+                  {isGenerating ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                      Generating diseases with AI...
+                    </>
+                  ) : (
+                    <>
+                      <Database className="w-5 h-5 mr-2" />
+                      Generate 100+ Diseases with AI
+                    </>
+                  )}
+                </Button>
+              </motion.div>
+            )}
           </motion.div>
         </div>
       </section>
@@ -155,8 +276,12 @@ export default function DiseasesPage() {
             </p>
           </div>
 
-          {/* Disease Grid */}
-          {filteredDiseases.length > 0 ? (
+          {/* Loading State */}
+          {isLoading ? (
+            <div className="flex items-center justify-center py-16">
+              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </div>
+          ) : filteredDiseases.length > 0 ? (
             <motion.div
               initial="hidden"
               animate="visible"
@@ -169,7 +294,7 @@ export default function DiseasesPage() {
                   variants={fadeInUp}
                   className="group"
                 >
-                  <Link to={`/diseases/${disease.id}`}>
+                  <Link to={`/diseases/${disease.slug}`}>
                     <article className="bg-card rounded-2xl p-6 h-full shadow-soft hover:shadow-card transition-all duration-300 border border-border hover:border-primary/20 flex flex-col">
                       {/* Category Badge */}
                       <span className="inline-block px-3 py-1 rounded-full bg-secondary text-secondary-foreground text-xs font-medium mb-4 w-fit">
@@ -182,7 +307,7 @@ export default function DiseasesPage() {
                       </h3>
 
                       {/* Summary */}
-                      <p className="text-muted-foreground text-sm mb-4 flex-1">
+                      <p className="text-muted-foreground text-sm mb-4 flex-1 line-clamp-2">
                         {disease.summary}
                       </p>
 
@@ -219,17 +344,21 @@ export default function DiseasesPage() {
           ) : (
             <div className="text-center py-16">
               <p className="text-muted-foreground text-lg mb-4">
-                No diseases found matching your search.
+                {diseases.length === 0 
+                  ? "No diseases in the database yet. Click the button above to generate them!"
+                  : "No diseases found matching your search."}
               </p>
-              <Button
-                variant="secondary"
-                onClick={() => {
-                  setSearchQuery("");
-                  setSelectedLetter(null);
-                }}
-              >
-                Clear Filters
-              </Button>
+              {diseases.length > 0 && (
+                <Button
+                  variant="secondary"
+                  onClick={() => {
+                    setSearchQuery("");
+                    setSelectedLetter(null);
+                  }}
+                >
+                  Clear Filters
+                </Button>
+              )}
             </div>
           )}
         </div>
