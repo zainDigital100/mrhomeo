@@ -14,7 +14,63 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      diseases: {
+        Row: {
+          advanced_symptoms: string[] | null
+          category: string
+          causes: string[] | null
+          created_at: string
+          early_symptoms: string[] | null
+          homeopathic_perspective: string | null
+          id: string
+          lifestyle_tips: string[] | null
+          medicines: Json | null
+          name: string
+          overview: string | null
+          slug: string
+          summary: string
+          symptoms: string[]
+          updated_at: string
+          when_to_consult: string[] | null
+        }
+        Insert: {
+          advanced_symptoms?: string[] | null
+          category: string
+          causes?: string[] | null
+          created_at?: string
+          early_symptoms?: string[] | null
+          homeopathic_perspective?: string | null
+          id?: string
+          lifestyle_tips?: string[] | null
+          medicines?: Json | null
+          name: string
+          overview?: string | null
+          slug: string
+          summary: string
+          symptoms?: string[]
+          updated_at?: string
+          when_to_consult?: string[] | null
+        }
+        Update: {
+          advanced_symptoms?: string[] | null
+          category?: string
+          causes?: string[] | null
+          created_at?: string
+          early_symptoms?: string[] | null
+          homeopathic_perspective?: string | null
+          id?: string
+          lifestyle_tips?: string[] | null
+          medicines?: Json | null
+          name?: string
+          overview?: string | null
+          slug?: string
+          summary?: string
+          symptoms?: string[]
+          updated_at?: string
+          when_to_consult?: string[] | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

@@ -1,1 +1,7 @@
 project_id = "mhnftycsrmujqmpqsgww"
+
+[functions.generate-diseases]
+verify_jwt = false
+
+[functions.homeopathy-chat]
+verify_jwt = false

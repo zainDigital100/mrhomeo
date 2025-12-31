@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { supabase } from "@/integrations/supabase/client";
 import { 
   Send, 
   Mic, 
@@ -11,8 +12,7 @@ import {
   User, 
   AlertCircle,
   Loader2,
-  Sparkles,
-  Volume2
+  Sparkles
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -56,52 +56,71 @@ export default function AITreatmentPage() {
     scrollToBottom();
   }, [messages]);
 
-  const generateAIResponse = async (userMessage: string): Promise<string> => {
-    // Simulated AI response - In production, this would call the Gemini API via edge function
-    await new Promise(resolve => setTimeout(resolve, 1500));
+  const streamChat = async (userMessages: { role: string; content: string }[]) => {
+    const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/homeopathy-chat`;
     
-    const responses = [
-      `Thank you for sharing that information. Based on your symptoms, I'd like to ask a few follow-up questions:
+    const resp = await fetch(CHAT_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+      },
+      body: JSON.stringify({ messages: userMessages }),
+    });
 
-1. **Duration**: How long have you been experiencing these symptoms?
-2. **Intensity**: On a scale of 1-10, how would you rate the severity?
-3. **Patterns**: Do you notice any particular time of day when symptoms are worse?
-4. **Triggers**: Have you identified anything that makes symptoms better or worse?
+    if (!resp.ok) {
+      const errorData = await resp.json().catch(() => ({}));
+      throw new Error(errorData.error || 'Failed to get response');
+    }
 
-Your answers will help me provide more accurate guidance.`,
+    if (!resp.body) throw new Error('No response body');
 
-      `Based on what you've described, here are some observations:
+    const reader = resp.body.getReader();
+    const decoder = new TextDecoder();
+    let textBuffer = "";
+    let fullContent = "";
 
-**Possible Condition**: Your symptoms may be related to a common condition that responds well to homeopathic treatment.
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      
+      textBuffer += decoder.decode(value, { stream: true });
 
-**Suggested Remedies** (for educational purposes):
-• **Arnica Montana** - Often helpful for physical discomfort
-• **Nux Vomica** - May support digestive wellness
-• **Ignatia** - Traditionally used for emotional balance
+      let newlineIndex: number;
+      while ((newlineIndex = textBuffer.indexOf("\n")) !== -1) {
+        let line = textBuffer.slice(0, newlineIndex);
+        textBuffer = textBuffer.slice(newlineIndex + 1);
 
-**Lifestyle Recommendations**:
-• Ensure adequate rest and hydration
-• Practice stress management techniques
-• Maintain regular meal times
+        if (line.endsWith("\r")) line = line.slice(0, -1);
+        if (line.startsWith(":") || line.trim() === "") continue;
+        if (!line.startsWith("data: ")) continue;
 
-Would you like more details about any of these remedies?`,
+        const jsonStr = line.slice(6).trim();
+        if (jsonStr === "[DONE]") break;
 
-      `I understand how challenging these symptoms can be. Here's my analysis:
+        try {
+          const parsed = JSON.parse(jsonStr);
+          const content = parsed.choices?.[0]?.delta?.content as string | undefined;
+          if (content) {
+            fullContent += content;
+            // Update the assistant message in real-time
+            setMessages(prev => {
+              const last = prev[prev.length - 1];
+              if (last?.role === "assistant" && last.id !== "welcome") {
+                return prev.map((m, i) => 
+                  i === prev.length - 1 ? { ...m, content: fullContent } : m
+                );
+              }
+              return prev;
+            });
+          }
+        } catch {
+          // Incomplete JSON, continue
+        }
+      }
+    }
 
-**Key Observations**:
-Your description suggests a pattern that homeopathy addresses by treating the whole person, not just isolated symptoms.
-
-**Recommended Approach**:
-1. Consider consulting a qualified homeopath for a complete assessment
-2. Keep a symptom diary to track patterns
-3. Focus on gentle, supportive care
-
-**Important Note**: If symptoms are severe or worsening, please seek immediate medical attention.
-
-Is there anything specific you'd like me to clarify?`
-    ];
-    
-    return responses[Math.floor(Math.random() * responses.length)];
+    return fullContent;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -115,27 +134,35 @@ Is there anything specific you'd like me to clarify?`
       timestamp: new Date()
     };
 
-    setMessages(prev => [...prev, userMessage]);
+    // Create placeholder assistant message
+    const assistantMessage: Message = {
+      id: (Date.now() + 1).toString(),
+      role: "assistant",
+      content: "",
+      timestamp: new Date()
+    };
+
+    setMessages(prev => [...prev, userMessage, assistantMessage]);
     setInputValue("");
     setIsLoading(true);
 
     try {
-      const response = await generateAIResponse(userMessage.content);
-      
-      const assistantMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        role: "assistant",
-        content: response,
-        timestamp: new Date()
-      };
+      // Build message history for API
+      const apiMessages = messages
+        .filter(m => m.id !== "welcome")
+        .map(m => ({ role: m.role, content: m.content }));
+      apiMessages.push({ role: "user", content: userMessage.content });
 
-      setMessages(prev => [...prev, assistantMessage]);
+      await streamChat(apiMessages);
     } catch (error) {
+      console.error("Chat error:", error);
       toast({
         title: "Error",
-        description: "Failed to get response. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to get response. Please try again.",
         variant: "destructive"
       });
+      // Remove the empty assistant message on error
+      setMessages(prev => prev.filter(m => m.id !== assistantMessage.id));
     } finally {
       setIsLoading(false);
     }
@@ -154,11 +181,31 @@ Is there anything specific you'd like me to clarify?`
     setIsListening(!isListening);
     
     if (!isListening) {
-      toast({
-        title: "Voice Input",
-        description: "Voice input feature will be enabled with backend integration.",
-      });
-      setIsListening(false);
+      const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
+      const recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      
+      recognition.onresult = (event: any) => {
+        const transcript = event.results[0][0].transcript;
+        setInputValue(prev => prev + transcript);
+        setIsListening(false);
+      };
+      
+      recognition.onerror = () => {
+        setIsListening(false);
+        toast({
+          title: "Voice Error",
+          description: "Could not recognize speech. Please try again.",
+          variant: "destructive"
+        });
+      };
+      
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+      
+      recognition.start();
     }
   };
 
@@ -184,7 +231,7 @@ Is there anything specific you'd like me to clarify?`
               </div>
               <div className="hidden md:flex items-center gap-2 text-sm text-muted-foreground">
                 <Sparkles className="w-4 h-4 text-primary" />
-                <span>Educational purposes only</span>
+                <span>Powered by Gemini AI</span>
               </div>
             </div>
           </div>
@@ -245,16 +292,23 @@ Is there anything specific you'd like me to clarify?`
                           : "gradient-primary text-primary-foreground"
                       }`}
                     >
-                      <div 
-                        className={`text-sm md:text-base whitespace-pre-wrap ${
-                          message.role === "assistant" ? "prose prose-sm max-w-none" : ""
-                        }`}
-                        dangerouslySetInnerHTML={{ 
-                          __html: message.content
-                            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                            .replace(/\n/g, '<br/>')
-                        }}
-                      />
+                      {message.role === "assistant" && message.content === "" ? (
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <span className="text-sm">Analyzing your symptoms...</span>
+                        </div>
+                      ) : (
+                        <div 
+                          className={`text-sm md:text-base whitespace-pre-wrap ${
+                            message.role === "assistant" ? "prose prose-sm max-w-none" : ""
+                          }`}
+                          dangerouslySetInnerHTML={{ 
+                            __html: message.content
+                              .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                              .replace(/\n/g, '<br/>')
+                          }}
+                        />
+                      )}
                     </div>
                     <p className="text-xs text-muted-foreground mt-1 px-1">
                       {message.timestamp.toLocaleTimeString([], { 
@@ -266,25 +320,6 @@ Is there anything specific you'd like me to clarify?`
                 </motion.div>
               ))}
             </AnimatePresence>
-
-            {/* Loading Indicator */}
-            {isLoading && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="flex gap-3 mb-6"
-              >
-                <div className="w-10 h-10 rounded-xl gradient-primary flex-shrink-0 flex items-center justify-center">
-                  <Bot className="w-5 h-5 text-primary-foreground" />
-                </div>
-                <div className="bg-card border border-border rounded-2xl px-4 py-3 shadow-soft">
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    <span className="text-sm">Analyzing your symptoms...</span>
-                  </div>
-                </div>
-              </motion.div>
-            )}
 
             <div ref={messagesEndRef} />
           </div>
