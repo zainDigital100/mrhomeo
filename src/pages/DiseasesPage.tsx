@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { Search, ArrowRight, Filter, Loader2 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
 
 interface Disease {
   id: string;
@@ -35,22 +34,13 @@ const staggerContainer = {
 export default function DiseasesPage() {
   const [diseases, setDiseases] = useState<Disease[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isGenerating, setIsGenerating] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedLetter, setSelectedLetter] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
-  const { toast } = useToast();
 
   useEffect(() => {
     fetchDiseases();
   }, []);
-
-  // Auto-generate diseases if less than 100 exist
-  useEffect(() => {
-    if (!isLoading && diseases.length < 100 && !isGenerating) {
-      generateDiseases();
-    }
-  }, [isLoading, diseases.length]);
 
   const fetchDiseases = async () => {
     try {
@@ -65,60 +55,6 @@ export default function DiseasesPage() {
       console.error('Error fetching diseases:', error);
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const generateDiseases = async () => {
-    setIsGenerating(true);
-    let batchStart = 0;
-    const batchSize = 5;
-
-    try {
-      toast({
-        title: "Generating Diseases",
-        description: "This may take a few minutes. Please wait...",
-      });
-
-      while (true) {
-        const { data, error } = await supabase.functions.invoke('generate-diseases', {
-          body: { batchStart, batchSize }
-        });
-
-        if (error) {
-          console.error('Generation error:', error);
-          throw error;
-        }
-
-        console.log('Batch result:', data);
-
-        if (data.remaining <= 0 || batchStart >= 120) {
-          break;
-        }
-
-        batchStart = data.nextBatch;
-        
-        // Refresh the list after each batch
-        await fetchDiseases();
-        
-        // Small delay between batches
-        await new Promise(resolve => setTimeout(resolve, 1000));
-      }
-
-      toast({
-        title: "Generation Complete",
-        description: "All diseases have been generated successfully!",
-      });
-
-      await fetchDiseases();
-    } catch (error) {
-      console.error('Error generating diseases:', error);
-      toast({
-        title: "Generation Error",
-        description: "There was an error generating diseases. Some may have been created.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsGenerating(false);
     }
   };
 
@@ -191,15 +127,7 @@ export default function DiseasesPage() {
                 }}
                 className="pl-12 h-14 rounded-2xl text-lg border-2 border-border focus:border-primary bg-card"
               />
-            </motion.div>
-
-            {/* Auto-generation status */}
-            {isGenerating && (
-              <motion.div variants={fadeInUp} className="mt-6 flex items-center justify-center gap-2 text-muted-foreground">
-                <Loader2 className="w-5 h-5 animate-spin" />
-                <span>Generating disease database with AI... This may take a few minutes.</span>
-              </motion.div>
-            )}
+          </motion.div>
           </motion.div>
         </div>
       </section>
@@ -336,7 +264,7 @@ export default function DiseasesPage() {
             <div className="text-center py-16">
               <p className="text-muted-foreground text-lg mb-4">
                 {diseases.length === 0 
-                  ? "No diseases in the database yet. Click the button above to generate them!"
+                  ? "Loading disease articles..."
                   : "No diseases found matching your search."}
               </p>
               {diseases.length > 0 && (

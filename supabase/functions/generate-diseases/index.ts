@@ -6,39 +6,90 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// List of 120 diseases to generate
+// Comprehensive disease list organized by category
 const diseaseList = [
-  "Acne", "Allergic Rhinitis", "Alopecia (Hair Loss)", "Anemia", "Anxiety Disorder",
-  "Arthritis", "Asthma", "Athlete's Foot", "Back Pain", "Bell's Palsy",
-  "Bronchitis", "Carpal Tunnel Syndrome", "Cataracts", "Celiac Disease", "Chickenpox",
-  "Chronic Fatigue Syndrome", "Cold Sores", "Common Cold", "Conjunctivitis", "Constipation",
-  "COPD", "Crohn's Disease", "Cystitis", "Depression", "Dermatitis",
-  "Diabetes Type 2", "Diarrhea", "Diverticulitis", "Dry Eye Syndrome", "Ear Infection",
-  "Eczema", "Endometriosis", "Epilepsy", "Erectile Dysfunction", "Fibromyalgia",
-  "Food Poisoning", "Frozen Shoulder", "Gallstones", "Gastritis", "GERD",
-  "Gout", "Graves' Disease", "Hay Fever", "Headaches", "Heartburn",
-  "Hemorrhoids", "Hepatitis", "Hernia", "High Blood Pressure", "High Cholesterol",
-  "Hives", "Hyperthyroidism", "Hypothyroidism", "IBS", "Impetigo",
-  "Indigestion", "Influenza", "Insomnia", "Interstitial Cystitis", "Iron Deficiency",
-  "Kidney Stones", "Laryngitis", "Lupus", "Lyme Disease", "Macular Degeneration",
-  "Meniere's Disease", "Menopause Symptoms", "Migraine", "Morning Sickness", "Multiple Sclerosis",
-  "Nausea", "Neuralgia", "Obesity", "Osteoarthritis", "Osteoporosis",
-  "Otitis Media", "Panic Disorder", "Parkinson's Disease", "PCOS", "Peptic Ulcer",
-  "Peripheral Neuropathy", "Pharyngitis", "Plantar Fasciitis", "Pleurisy", "PMS",
-  "Pneumonia", "Poison Ivy", "Prostatitis", "Psoriasis", "Raynaud's Disease",
-  "Restless Leg Syndrome", "Rheumatoid Arthritis", "Ringworm", "Rosacea", "Sciatica",
-  "Shingles", "Sinusitis", "Sleep Apnea", "Sore Throat", "Sprain",
-  "Stomach Flu", "Stress", "Stroke Recovery", "Stye", "Sunburn",
-  "Tendinitis", "Tennis Elbow", "Tinnitus", "Tonsillitis", "Toothache",
-  "Ulcerative Colitis", "Urinary Tract Infection", "Varicose Veins", "Vertigo", "Warts",
-  "Whooping Cough", "Yeast Infection"
+  // Extremely Common & Seasonal Ailments
+  "Common Cold", "Influenza", "Strep Throat", "Sinusitis", "Gastroenteritis", 
+  "Food Poisoning", "Conjunctivitis", "Ear Infection", "Bronchitis", "Laryngitis", 
+  "Tonsillitis", "Allergic Rhinitis", "Urinary Tract Infection", "Chickenpox", "Acid Reflux",
+  
+  // Prevalent in Pakistan & South Asia
+  "Dengue Fever", "Typhoid Fever", "Malaria", "Hepatitis A", "Hepatitis C", 
+  "Tuberculosis", "Cholera", "Amoebiasis", "Scabies", "Heatstroke",
+  
+  // Chronic & Lifestyle Diseases
+  "Hypertension", "Diabetes Mellitus", "Asthma", "Obesity", "High Cholesterol", 
+  "Osteoarthritis", "Iron Deficiency Anemia", "Chronic Kidney Disease", "Fatty Liver Disease", 
+  "Hypothyroidism", "Migraine", "Insomnia", "Sleep Apnea", "Hemorrhoids", "Peptic Ulcer",
+  
+  // Skin & Aesthetic Conditions
+  "Acne Vulgaris", "Eczema", "Psoriasis", "Ringworm", "Urticaria", 
+  "Vitiligo", "Warts", "Rosacea", "Athlete's Foot", "Alopecia",
+  
+  // Mental Health & Neurological
+  "Anxiety Disorder", "Clinical Depression", "Panic Disorder", "Bipolar Disorder", "OCD", 
+  "ADHD", "Alzheimer's Disease", "Parkinson's Disease", "Epilepsy", "Multiple Sclerosis", 
+  "Schizophrenia", "PTSD", "Dementia", "Autism Spectrum Disorder", "Bell's Palsy",
+  
+  // Digestive & Metabolic
+  "Irritable Bowel Syndrome", "Celiac Disease", "Lactose Intolerance", "Gallstones", "Appendicitis", 
+  "Chronic Constipation", "Crohn's Disease", "Ulcerative Colitis", "Pancreatitis", "Cirrhosis",
+  
+  // Cancers
+  "Breast Cancer", "Lung Cancer", "Prostate Cancer", "Leukemia", "Colorectal Cancer", 
+  "Oral Cancer", "Lymphoma", "Melanoma", "Ovarian Cancer", "Bladder Cancer",
+  
+  // Bone, Muscle & Joint
+  "Rheumatoid Arthritis", "Osteoporosis", "Gout", "Lupus", "Scoliosis", 
+  "Herniated Disc", "Fibromyalgia", "Carpal Tunnel Syndrome", "Sciatica", "Muscular Dystrophy",
+  
+  // Cardiovascular & Others
+  "Coronary Artery Disease", "Congestive Heart Failure", "Stroke", "Aneurysm", "Pneumonia"
 ];
 
-const categories = [
-  "Mental Health", "Neurological", "Skin Conditions", "Digestive", "Respiratory",
-  "Musculoskeletal", "Immune System", "Cardiovascular", "Women's Health", "Men's Health",
-  "Eye & Ear", "Infectious", "Metabolic", "Urinary"
-];
+const categoryMap: Record<string, string> = {
+  "Common Cold": "Seasonal Ailments", "Influenza": "Seasonal Ailments", "Strep Throat": "Seasonal Ailments",
+  "Sinusitis": "Seasonal Ailments", "Gastroenteritis": "Seasonal Ailments", "Food Poisoning": "Seasonal Ailments",
+  "Conjunctivitis": "Seasonal Ailments", "Ear Infection": "Seasonal Ailments", "Bronchitis": "Seasonal Ailments",
+  "Laryngitis": "Seasonal Ailments", "Tonsillitis": "Seasonal Ailments", "Allergic Rhinitis": "Seasonal Ailments",
+  "Urinary Tract Infection": "Seasonal Ailments", "Chickenpox": "Seasonal Ailments", "Acid Reflux": "Seasonal Ailments",
+  
+  "Dengue Fever": "Regional Diseases", "Typhoid Fever": "Regional Diseases", "Malaria": "Regional Diseases",
+  "Hepatitis A": "Regional Diseases", "Hepatitis C": "Regional Diseases", "Tuberculosis": "Regional Diseases",
+  "Cholera": "Regional Diseases", "Amoebiasis": "Regional Diseases", "Scabies": "Regional Diseases", "Heatstroke": "Regional Diseases",
+  
+  "Hypertension": "Chronic Diseases", "Diabetes Mellitus": "Chronic Diseases", "Asthma": "Chronic Diseases",
+  "Obesity": "Chronic Diseases", "High Cholesterol": "Chronic Diseases", "Osteoarthritis": "Chronic Diseases",
+  "Iron Deficiency Anemia": "Chronic Diseases", "Chronic Kidney Disease": "Chronic Diseases", "Fatty Liver Disease": "Chronic Diseases",
+  "Hypothyroidism": "Chronic Diseases", "Migraine": "Chronic Diseases", "Insomnia": "Chronic Diseases",
+  "Sleep Apnea": "Chronic Diseases", "Hemorrhoids": "Chronic Diseases", "Peptic Ulcer": "Chronic Diseases",
+  
+  "Acne Vulgaris": "Skin Conditions", "Eczema": "Skin Conditions", "Psoriasis": "Skin Conditions",
+  "Ringworm": "Skin Conditions", "Urticaria": "Skin Conditions", "Vitiligo": "Skin Conditions",
+  "Warts": "Skin Conditions", "Rosacea": "Skin Conditions", "Athlete's Foot": "Skin Conditions", "Alopecia": "Skin Conditions",
+  
+  "Anxiety Disorder": "Mental Health", "Clinical Depression": "Mental Health", "Panic Disorder": "Mental Health",
+  "Bipolar Disorder": "Mental Health", "OCD": "Mental Health", "ADHD": "Mental Health",
+  "Alzheimer's Disease": "Neurological", "Parkinson's Disease": "Neurological", "Epilepsy": "Neurological",
+  "Multiple Sclerosis": "Neurological", "Schizophrenia": "Mental Health", "PTSD": "Mental Health",
+  "Dementia": "Neurological", "Autism Spectrum Disorder": "Neurological", "Bell's Palsy": "Neurological",
+  
+  "Irritable Bowel Syndrome": "Digestive", "Celiac Disease": "Digestive", "Lactose Intolerance": "Digestive",
+  "Gallstones": "Digestive", "Appendicitis": "Digestive", "Chronic Constipation": "Digestive",
+  "Crohn's Disease": "Digestive", "Ulcerative Colitis": "Digestive", "Pancreatitis": "Digestive", "Cirrhosis": "Digestive",
+  
+  "Breast Cancer": "Oncology", "Lung Cancer": "Oncology", "Prostate Cancer": "Oncology",
+  "Leukemia": "Oncology", "Colorectal Cancer": "Oncology", "Oral Cancer": "Oncology",
+  "Lymphoma": "Oncology", "Melanoma": "Oncology", "Ovarian Cancer": "Oncology", "Bladder Cancer": "Oncology",
+  
+  "Rheumatoid Arthritis": "Musculoskeletal", "Osteoporosis": "Musculoskeletal", "Gout": "Musculoskeletal",
+  "Lupus": "Musculoskeletal", "Scoliosis": "Musculoskeletal", "Herniated Disc": "Musculoskeletal",
+  "Fibromyalgia": "Musculoskeletal", "Carpal Tunnel Syndrome": "Musculoskeletal", "Sciatica": "Musculoskeletal",
+  "Muscular Dystrophy": "Musculoskeletal",
+  
+  "Coronary Artery Disease": "Cardiovascular", "Congestive Heart Failure": "Cardiovascular",
+  "Stroke": "Cardiovascular", "Aneurysm": "Cardiovascular", "Pneumonia": "Respiratory"
+};
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -88,6 +139,8 @@ serve(async (req) => {
         continue;
       }
 
+      const category = categoryMap[diseaseName] || "General Health";
+      
       const prompt = `Generate very comprehensive and detailed homeopathic health information for "${diseaseName}". 
       
 Write EXTENSIVE content with 7-10 paragraphs for each text field. Be thorough and educational.
@@ -98,7 +151,7 @@ Return a JSON object with these exact fields:
   "slug": "${diseaseName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}",
   "summary": "A detailed 4-5 sentence description of the condition, covering what it is, who it affects, and its general impact on health and quality of life.",
   "symptoms": ["symptom1", "symptom2", "symptom3", "symptom4", "symptom5", "symptom6", "symptom7", "symptom8"],
-  "category": "One of: Mental Health, Neurological, Skin Conditions, Digestive, Respiratory, Musculoskeletal, Immune System, Cardiovascular, Women's Health, Men's Health, Eye & Ear, Infectious, Metabolic, Urinary",
+  "category": "${category}",
   "overview": "Write 7-10 detailed paragraphs (each 3-4 sentences) explaining this condition comprehensively. Cover: what the condition is, its medical classification, how common it is, risk factors, age groups affected, how it develops over time, its relationship to other conditions, the body systems involved, prognosis, and general medical understanding. Make this a complete educational article about the condition.",
   "causes": ["Detailed cause 1 with explanation", "Detailed cause 2 with explanation", "Detailed cause 3 with explanation", "Detailed cause 4 with explanation", "Detailed cause 5 with explanation", "Detailed cause 6 with explanation", "Detailed cause 7 with explanation", "Detailed cause 8 with explanation"],
   "early_symptoms": ["Early symptom 1 with detailed description", "Early symptom 2 with detailed description", "Early symptom 3 with detailed description", "Early symptom 4 with detailed description", "Early symptom 5 with detailed description", "Early symptom 6 with detailed description"],
