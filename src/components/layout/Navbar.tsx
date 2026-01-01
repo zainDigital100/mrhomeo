@@ -25,7 +25,7 @@ export function Navbar() {
               <Leaf className="w-5 h-5 text-primary-foreground" />
             </div>
             <span className="text-xl font-display font-semibold text-foreground">
-              Holistic<span className="text-primary">AI</span>
+              MY <span className="text-primary">Homeo</span>
             </span>
           </Link>
 
