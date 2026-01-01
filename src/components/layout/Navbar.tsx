@@ -31,7 +31,7 @@ export function Navbar() {
             <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center shadow-soft group-hover:shadow-card transition-shadow">
               <Leaf className="w-5 h-5 text-primary-foreground" />
             </div>
-            <span className="text-xl font-display font-semibold text-foreground">My Homeo<span className="text-primary">Homeo</span>
+            <span className="text-xl font-display font-semibold text-foreground">MyHomeo<span className="text-primary">Homeo</span>
             </span>
           </Link>
 
