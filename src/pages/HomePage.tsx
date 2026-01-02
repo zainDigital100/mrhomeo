@@ -89,7 +89,7 @@ export default function HomePage() {
                 </Link>
                 <Link to="/diseases">
                   <Button variant="hero-outline" size="xl">
-                    Browse Remedies
+                    Browse Disease
                   </Button>
                 </Link>
               </motion.div>
