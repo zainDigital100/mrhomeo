@@ -12,7 +12,8 @@ import {
   Activity,
   Users,
   MessageSquare,
-  CheckCircle
+  CheckCircle,
+  Zap
 } from "lucide-react";
 import heroBg from "@/assets/hero-bg.jpg";
 
@@ -33,13 +34,31 @@ export default function HomePage() {
   return (
     <Layout>
       {/* Hero Section */}
-      <section className="relative min-h-[90vh] flex items-center overflow-hidden">
+      <section className="relative min-h-[85vh] sm:min-h-[90vh] flex items-center overflow-hidden">
         {/* Background */}
         <div 
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{ backgroundImage: `url(${heroBg})` }}
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-background/95 via-background/80 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-r from-background/98 via-background/85 to-background/40 sm:from-background/95 sm:via-background/80 sm:to-transparent" />
+        
+        {/* Decorative elements */}
+        <motion.div 
+          className="absolute top-20 right-20 w-72 h-72 bg-primary/10 rounded-full blur-3xl hidden lg:block"
+          animate={{ 
+            scale: [1, 1.1, 1],
+            opacity: [0.3, 0.5, 0.3]
+          }}
+          transition={{ duration: 8, repeat: Infinity }}
+        />
+        <motion.div 
+          className="absolute bottom-20 left-1/3 w-48 h-48 bg-primary/5 rounded-full blur-3xl hidden lg:block"
+          animate={{ 
+            scale: [1.1, 1, 1.1],
+            opacity: [0.2, 0.4, 0.2]
+          }}
+          transition={{ duration: 6, repeat: Infinity }}
+        />
         
         <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-3xl">
@@ -47,20 +66,23 @@ export default function HomePage() {
               initial="hidden"
               animate="visible"
               variants={staggerContainer}
-              className="space-y-6"
+              className="space-y-5 sm:space-y-6"
             >
               {/* Badge */}
               <motion.div variants={fadeInUp}>
-                <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary text-secondary-foreground text-sm font-medium">
-                  <Sparkles className="w-4 h-4 text-primary" />
+                <motion.span 
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary/80 backdrop-blur-sm text-secondary-foreground text-xs sm:text-sm font-medium border border-primary/10"
+                  whileHover={{ scale: 1.02, y: -2 }}
+                >
+                  <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
                   AI-Powered Homeopathy
-                </span>
+                </motion.span>
               </motion.div>
 
               {/* Heading */}
               <motion.h1 
                 variants={fadeInUp}
-                className="text-4xl md:text-5xl lg:text-6xl font-display font-bold text-foreground leading-tight"
+                className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-display font-bold text-foreground leading-tight"
               >
                 Natural Healing{" "}
                 <span className="text-gradient">Meets Intelligence</span>
@@ -69,7 +91,7 @@ export default function HomePage() {
               {/* Subtitle */}
               <motion.p 
                 variants={fadeInUp}
-                className="text-lg md:text-xl text-muted-foreground max-w-xl"
+                className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-xl"
               >
                 Your personal AI homeopathic consultant. Get instant, natural remedy 
                 suggestions tailored to your specific symptoms, backed by centuries 
@@ -79,19 +101,42 @@ export default function HomePage() {
               {/* CTA Buttons */}
               <motion.div 
                 variants={fadeInUp}
-                className="flex flex-wrap gap-4 pt-4"
+                className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-2 sm:pt-4"
               >
-                <Link to="/ai-treatment">
-                  <Button variant="hero" size="xl">
-                    Start AI Consultation
-                    <ArrowRight className="w-5 h-5" />
-                  </Button>
+                <Link to="/ai-treatment" className="w-full sm:w-auto">
+                  <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                    <Button variant="hero" size="xl" className="w-full sm:w-auto shadow-glow">
+                      Start AI Consultation
+                      <ArrowRight className="w-5 h-5" />
+                    </Button>
+                  </motion.div>
                 </Link>
-                <Link to="/diseases">
-                  <Button variant="hero-outline" size="xl">
-                    Browse Disease
-                  </Button>
+                <Link to="/diseases" className="w-full sm:w-auto">
+                  <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                    <Button variant="hero-outline" size="xl" className="w-full sm:w-auto">
+                      Browse Disease
+                    </Button>
+                  </motion.div>
                 </Link>
+              </motion.div>
+              
+              {/* Quick stats */}
+              <motion.div 
+                variants={fadeInUp}
+                className="flex flex-wrap items-center gap-4 sm:gap-6 pt-4 sm:pt-6 text-sm text-muted-foreground"
+              >
+                <div className="flex items-center gap-2">
+                  <Zap className="w-4 h-4 text-primary" />
+                  <span>Instant Analysis</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Shield className="w-4 h-4 text-primary" />
+                  <span>100% Private</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <MessageSquare className="w-4 h-4 text-primary" />
+                  <span>24/7 Available</span>
+                </div>
               </motion.div>
             </motion.div>
           </div>
@@ -99,16 +144,23 @@ export default function HomePage() {
 
         {/* Floating Feature Card */}
         <motion.div
-          initial={{ opacity: 0, x: 50 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.5, duration: 0.6 }}
+          initial={{ opacity: 0, x: 50, y: 20 }}
+          animate={{ opacity: 1, x: 0, y: 0 }}
+          transition={{ delay: 0.6, duration: 0.6 }}
           className="absolute right-8 bottom-24 hidden lg:block"
         >
-          <div className="bg-card/90 backdrop-blur-sm rounded-2xl p-6 shadow-elevated border border-border max-w-xs">
+          <motion.div 
+            className="bg-card/95 backdrop-blur-md rounded-2xl p-6 shadow-elevated border border-border max-w-xs"
+            whileHover={{ y: -4, scale: 1.02 }}
+            transition={{ duration: 0.3 }}
+          >
             <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center">
-                <Heart className="w-6 h-6 text-primary" />
-              </div>
+              <motion.div 
+                className="w-12 h-12 rounded-xl gradient-primary flex items-center justify-center shadow-soft"
+                whileHover={{ rotate: 5 }}
+              >
+                <Heart className="w-6 h-6 text-primary-foreground" />
+              </motion.div>
               <div>
                 <h4 className="font-semibold text-foreground mb-1">Personalized Care</h4>
                 <p className="text-sm text-muted-foreground">
@@ -116,7 +168,7 @@ export default function HomePage() {
                 </p>
               </div>
             </div>
-          </div>
+          </motion.div>
         </motion.div>
       </section>
 

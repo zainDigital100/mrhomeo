@@ -47,13 +47,15 @@
     
     /* Custom tokens */
     --gradient-primary: linear-gradient(135deg, hsl(160 84% 39%) 0%, hsl(168 76% 42%) 100%);
-    --gradient-hero: linear-gradient(135deg, hsl(158 60% 96%) 0%, hsl(160 50% 88%) 50%, hsl(165 55% 85%) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(158 60% 97%) 0%, hsl(160 50% 92%) 50%, hsl(165 55% 90%) 100%);
     --gradient-card: linear-gradient(180deg, hsl(158 50% 97%) 0%, hsl(0 0% 100%) 100%);
     --gradient-mint: linear-gradient(135deg, hsl(158 60% 92%) 0%, hsl(168 50% 90%) 100%);
+    --gradient-glass: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.7) 100%);
     
-    --shadow-soft: 0 4px 20px -4px hsl(160 40% 50% / 0.15);
-    --shadow-card: 0 8px 30px -8px hsl(160 40% 40% / 0.12);
-    --shadow-elevated: 0 12px 40px -10px hsl(160 40% 40% / 0.2);
+    --shadow-soft: 0 4px 20px -4px hsl(160 40% 50% / 0.12);
+    --shadow-card: 0 8px 30px -8px hsl(160 40% 40% / 0.1);
+    --shadow-elevated: 0 20px 50px -15px hsl(160 40% 40% / 0.18);
+    --shadow-glow: 0 0 40px -10px hsl(160 84% 39% / 0.3);
     
     /* Sidebar tokens */
     --sidebar-background: 0 0% 98%;
@@ -95,6 +97,8 @@
     --input: 160 20% 20%;
     --ring: 160 70% 50%;
     
+    --gradient-glass: linear-gradient(135deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.2) 100%);
+    
     --sidebar-background: 160 25% 10%;
     --sidebar-foreground: 158 20% 95%;
     --sidebar-primary: 160 70% 50%;
@@ -109,6 +113,10 @@
 @layer base {
   * {
     @apply border-border;
+  }
+
+  html {
+    scroll-behavior: smooth;
   }
 
   body {
@@ -145,6 +153,10 @@
   .gradient-mint {
     background: var(--gradient-mint);
   }
+
+  .gradient-glass {
+    background: var(--gradient-glass);
+  }
   
   .shadow-soft {
     box-shadow: var(--shadow-soft);
@@ -157,6 +169,10 @@
   .shadow-elevated {
     box-shadow: var(--shadow-elevated);
   }
+
+  .shadow-glow {
+    box-shadow: var(--shadow-glow);
+  }
   
   .text-gradient {
     background: var(--gradient-primary);
@@ -164,24 +180,99 @@
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
+
+  /* Glassmorphism effect */
+  .glass {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+
+  .dark .glass {
+    background: rgba(0, 0, 0, 0.5);
+  }
+
+  /* Interactive card hover effect */
+  .card-interactive {
+    @apply transition-all duration-300 ease-out;
+  }
+
+  .card-interactive:hover {
+    @apply -translate-y-1;
+    box-shadow: var(--shadow-elevated);
+  }
+
+  /* Subtle float animation */
+  .float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+
+  /* Pulse glow effect */
+  .pulse-glow {
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse-glow {
+    0%, 100% { 
+      box-shadow: 0 0 20px -5px hsl(var(--primary) / 0.3);
+    }
+    50% { 
+      box-shadow: 0 0 30px -5px hsl(var(--primary) / 0.5);
+    }
+  }
+
+  /* Wave background pattern */
+  .wave-pattern {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'%3E%3Cpath fill='%2310b981' fill-opacity='0.05' d='M0,96L48,112C96,128,192,160,288,186.7C384,213,480,235,576,218.7C672,203,768,149,864,128C960,107,1056,117,1152,138.7C1248,160,1344,192,1392,208L1440,224L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z'%3E%3C/path%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: bottom;
+    background-size: 100% auto;
+  }
 }
 
 /* Custom scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
   background: hsl(var(--muted));
-  border-radius: 4px;
+  border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: hsl(var(--primary) / 0.3);
-  border-radius: 4px;
+  background: hsl(var(--primary) / 0.25);
+  border-radius: 3px;
+  transition: background 0.2s;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--primary) / 0.5);
+  background: hsl(var(--primary) / 0.4);
+}
+
+/* Focus visible styles for accessibility */
+:focus-visible {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 2px;
+}
+
+/* Smooth transitions for interactive elements */
+button, a, input, textarea {
+  transition: all 0.2s ease;
+}
+
+/* Hide scrollbar but allow scrolling (for chat) */
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
 }
