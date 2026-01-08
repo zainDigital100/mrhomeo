@@ -2,7 +2,26 @@ import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Leaf, Home, BookOpen, Bot, Info, Menu, X } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { 
+  Leaf, 
+  Home, 
+  BookOpen, 
+  Bot, 
+  Info, 
+  Menu, 
+  X, 
+  LogIn, 
+  User,
+  LogOut
+} from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const navItems = [
   { path: "/", label: "Home", icon: Home },
@@ -15,6 +34,7 @@ export function Navbar() {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const { user, signOut, isLoading } = useAuth();
 
   // Handle scroll effect
   useEffect(() => {
@@ -29,6 +49,10 @@ export function Navbar() {
   useEffect(() => {
     setMobileMenuOpen(false);
   }, [location.pathname]);
+
+  const handleSignOut = async () => {
+    await signOut();
+  };
 
   return (
     <motion.header 
@@ -52,7 +76,7 @@ export function Navbar() {
               <Leaf className="w-4 h-4 sm:w-5 sm:h-5 text-primary-foreground" />
             </motion.div>
             <span className="text-lg sm:text-xl font-display font-semibold text-foreground">
-              MY <span className="text-primary">Homeo</span>
+              Mr <span className="text-primary">Homeo</span>
             </span>
           </Link>
 
@@ -79,8 +103,47 @@ export function Navbar() {
             })}
           </div>
 
-          {/* CTA Button */}
-          <div className="hidden md:block">
+          {/* Auth & CTA Buttons */}
+          <div className="hidden md:flex items-center gap-3">
+            {!isLoading && (
+              user ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      className="flex items-center gap-2 px-3 py-2 rounded-full bg-secondary/60 border border-border hover:bg-secondary transition-colors"
+                    >
+                      <div className="w-7 h-7 rounded-full gradient-primary flex items-center justify-center">
+                        <User className="w-4 h-4 text-primary-foreground" />
+                      </div>
+                      <span className="text-sm font-medium text-foreground max-w-[120px] truncate">
+                        {user.email?.split('@')[0]}
+                      </span>
+                    </motion.button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuItem className="text-muted-foreground text-xs">
+                      {user.email}
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleSignOut} className="text-destructive cursor-pointer">
+                      <LogOut className="w-4 h-4 mr-2" />
+                      Sign Out
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <Link to="/auth">
+                  <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                    <Button variant="outline" size="sm" className="rounded-full gap-2">
+                      <LogIn className="w-4 h-4" />
+                      Sign In
+                    </Button>
+                  </motion.div>
+                </Link>
+              )
+            )}
             <Link to="/ai-treatment">
               <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                 <Button variant="hero" size="default" className="shadow-soft">
@@ -143,7 +206,7 @@ export function Navbar() {
                 visible: { opacity: 1, transition: { staggerChildren: 0.05 } }
               }}
             >
-              {navItems.map((item, index) => {
+              {navItems.map((item) => {
                 const isActive = location.pathname === item.path;
                 const Icon = item.icon;
                 
@@ -171,6 +234,49 @@ export function Navbar() {
                   </motion.div>
                 );
               })}
+              
+              {/* Mobile Auth */}
+              <motion.div
+                variants={{
+                  hidden: { opacity: 0, x: -20 },
+                  visible: { opacity: 1, x: 0 }
+                }}
+                className="pt-2 border-t border-border"
+              >
+                {!isLoading && (
+                  user ? (
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-3 p-3 rounded-xl bg-secondary/50">
+                        <div className="w-8 h-8 rounded-full gradient-primary flex items-center justify-center">
+                          <User className="w-4 h-4 text-primary-foreground" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-foreground">{user.email?.split('@')[0]}</p>
+                          <p className="text-xs text-muted-foreground">{user.email}</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={handleSignOut}
+                        className="flex items-center gap-3 p-3 rounded-xl w-full text-destructive hover:bg-destructive/10 transition-colors"
+                      >
+                        <LogOut className="w-5 h-5" />
+                        <span className="font-medium">Sign Out</span>
+                      </button>
+                    </div>
+                  ) : (
+                    <Link to="/auth">
+                      <motion.div
+                        className="flex items-center gap-3 p-3 rounded-xl hover:bg-accent transition-colors"
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        <LogIn className="w-5 h-5" />
+                        <span className="font-medium">Sign In</span>
+                      </motion.div>
+                    </Link>
+                  )
+                )}
+              </motion.div>
+
               <motion.div
                 variants={{
                   hidden: { opacity: 0, x: -20 },
