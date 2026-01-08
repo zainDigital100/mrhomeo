@@ -3,31 +3,36 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "@/contexts/AuthContext";
 import HomePage from "./pages/HomePage";
 import DiseasesPage from "./pages/DiseasesPage";
 import DiseaseDetailPage from "./pages/DiseaseDetailPage";
 import AITreatmentPage from "./pages/AITreatmentPage";
 import AboutPage from "./pages/AboutPage";
+import AuthPage from "./pages/AuthPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/diseases" element={<DiseasesPage />} />
-          <Route path="/diseases/:id" element={<DiseaseDetailPage />} />
-          <Route path="/ai-treatment" element={<AITreatmentPage />} />
-          <Route path="/about" element={<AboutPage />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
+    <AuthProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/diseases" element={<DiseasesPage />} />
+            <Route path="/diseases/:id" element={<DiseaseDetailPage />} />
+            <Route path="/ai-treatment" element={<AITreatmentPage />} />
+            <Route path="/about" element={<AboutPage />} />
+            <Route path="/auth" element={<AuthPage />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </AuthProvider>
   </QueryClientProvider>
 );
 

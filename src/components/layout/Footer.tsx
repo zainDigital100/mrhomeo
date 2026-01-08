@@ -12,9 +12,9 @@ export function Footer() {
               <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center">
                 <Leaf className="w-5 h-5 text-primary-foreground" />
               </div>
-              <span className="text-xl font-display font-semibold text-foreground">
-                MY <span className="text-primary">Homeo</span>
-              </span>
+            <span className="text-xl font-display font-semibold text-foreground">
+              Mr <span className="text-primary">Homeo</span>
+            </span>
             </Link>
             <p className="text-muted-foreground max-w-md mb-4">
               Your AI-powered homeopathic consultant. Get instant, natural remedy suggestions 
@@ -23,7 +23,7 @@ export function Footer() {
             <div className="flex items-center gap-4 text-sm text-muted-foreground">
               <div className="flex items-center gap-2">
                 <Mail className="w-4 h-4" />
-                <span>contact@myhomeo.com</span>
+                <span>contact@mrhomeo.com</span>
               </div>
             </div>
           </div>
@@ -82,7 +82,7 @@ export function Footer() {
           
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <p className="text-sm text-muted-foreground">
-              © {new Date().getFullYear()} MY Homeo. All rights reserved.
+              © {new Date().getFullYear()} Mr Homeo. All rights reserved.
             </p>
             <p className="text-sm text-muted-foreground flex items-center gap-1">
               Made with <Heart className="w-4 h-4 text-primary fill-primary" /> for natural healing
