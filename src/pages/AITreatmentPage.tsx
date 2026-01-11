@@ -6,6 +6,7 @@ import { ChatMessage } from "@/components/chat/ChatMessage";
 import { ChatInput } from "@/components/chat/ChatInput";
 import { useSmartScroll } from "@/hooks/useSmartScroll";
 import { useChatHistory } from "@/hooks/useChatHistory";
+import { useCredits } from "@/hooks/useCredits";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { 
@@ -18,7 +19,8 @@ import {
   Trash2,
   LogIn,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Coins
 } from "lucide-react";
 
 interface Message {
@@ -61,6 +63,8 @@ export default function AITreatmentPage() {
     loadMessages,
     deleteConversation
   } = useChatHistory();
+
+  const { credits, deductCredit, hasCredits, isLoading: creditsLoading } = useCredits();
   
   const { containerRef, scrollToBottom, forceScrollToBottom } = useSmartScroll<HTMLDivElement>({
     threshold: 200
@@ -151,6 +155,16 @@ export default function AITreatmentPage() {
   };
 
   const handleSendMessage = async (content: string) => {
+    // Check if user has credits (if logged in)
+    if (user && !hasCredits) {
+      toast({
+        title: "No credits remaining",
+        description: "You've used all your credits. Please add more to continue.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     const userMessage: Message = {
       id: Date.now().toString(),
       role: "user",
@@ -184,6 +198,11 @@ export default function AITreatmentPage() {
       apiMessages.push({ role: "user", content: userMessage.content });
 
       const aiResponse = await streamChat(apiMessages);
+
+      // Deduct credit if user is signed in
+      if (user) {
+        await deductCredit();
+      }
 
       // Save messages if user is signed in
       if (user && conversationId) {
@@ -342,6 +361,14 @@ export default function AITreatmentPage() {
                     <Sparkles className="w-3.5 h-3.5 text-primary" />
                     <span className="text-xs font-medium text-secondary-foreground">Powered by Gemini</span>
                   </div>
+                  
+                  {/* Credits display */}
+                  {user && !creditsLoading && credits !== null && (
+                    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20">
+                      <Coins className="w-3.5 h-3.5 text-primary" />
+                      <span className="text-xs font-semibold text-primary">{credits} credits</span>
+                    </div>
+                  )}
                   
                   {/* Mobile history button */}
                   {user && (
