@@ -155,11 +155,13 @@ export default function AITreatmentPage() {
   };
 
   const handleSendMessage = async (content: string) => {
-    // Check if user has credits (if logged in)
-    if (user && !hasCredits) {
+    // Check if user has credits
+    if (!hasCredits) {
       toast({
         title: "No credits remaining",
-        description: "You've used all your credits. Please add more to continue.",
+        description: user 
+          ? "You've used all your credits. Please add more to continue."
+          : "Sign in to get 30 free credits!",
         variant: "destructive"
       });
       return;
@@ -199,10 +201,8 @@ export default function AITreatmentPage() {
 
       const aiResponse = await streamChat(apiMessages);
 
-      // Deduct credit if user is signed in
-      if (user) {
-        await deductCredit();
-      }
+      // Deduct credit
+      await deductCredit();
 
       // Save messages if user is signed in
       if (user && conversationId) {
@@ -363,10 +363,14 @@ export default function AITreatmentPage() {
                   </div>
                   
                   {/* Credits display */}
-                  {user && !creditsLoading && credits !== null && (
-                    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20">
-                      <Coins className="w-3.5 h-3.5 text-primary" />
-                      <span className="text-xs font-semibold text-primary">{credits} credits</span>
+                  {!creditsLoading && credits !== null && (
+                    <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border ${
+                      credits > 0 ? 'bg-primary/10 border-primary/20' : 'bg-destructive/10 border-destructive/20'
+                    }`}>
+                      <Coins className={`w-3.5 h-3.5 ${credits > 0 ? 'text-primary' : 'text-destructive'}`} />
+                      <span className={`text-xs font-semibold ${credits > 0 ? 'text-primary' : 'text-destructive'}`}>
+                        {credits} credit{credits !== 1 ? 's' : ''}
+                      </span>
                     </div>
                   )}
                   
