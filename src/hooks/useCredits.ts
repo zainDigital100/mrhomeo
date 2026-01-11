@@ -2,6 +2,23 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
+const ANONYMOUS_CREDITS_KEY = 'mr_homeo_anonymous_credits';
+const ANONYMOUS_MAX_CREDITS = 3;
+const SIGNED_IN_CREDITS = 30;
+
+const getAnonymousCredits = (): number => {
+  const stored = localStorage.getItem(ANONYMOUS_CREDITS_KEY);
+  if (stored === null) {
+    localStorage.setItem(ANONYMOUS_CREDITS_KEY, String(ANONYMOUS_MAX_CREDITS));
+    return ANONYMOUS_MAX_CREDITS;
+  }
+  return parseInt(stored, 10);
+};
+
+const setAnonymousCredits = (credits: number): void => {
+  localStorage.setItem(ANONYMOUS_CREDITS_KEY, String(Math.max(0, credits)));
+};
+
 export const useCredits = () => {
   const { user } = useAuth();
   const [credits, setCredits] = useState<number | null>(null);
@@ -9,7 +26,8 @@ export const useCredits = () => {
 
   const fetchCredits = useCallback(async () => {
     if (!user) {
-      setCredits(null);
+      // Anonymous user - use localStorage
+      setCredits(getAnonymousCredits());
       setIsLoading(false);
       return;
     }
@@ -19,22 +37,26 @@ export const useCredits = () => {
         .from('user_credits')
         .select('credits')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
       if (error) {
-        // If no credits record exists, create one
-        if (error.code === 'PGRST116') {
-          const { data: newData, error: insertError } = await supabase
-            .from('user_credits')
-            .insert({ user_id: user.id, credits: 10 })
-            .select('credits')
-            .single();
+        console.error('Error fetching credits:', error);
+        setIsLoading(false);
+        return;
+      }
 
-          if (!insertError && newData) {
-            setCredits(newData.credits);
-          }
+      if (!data) {
+        // No credits record exists, create one with 30 credits
+        const { data: newData, error: insertError } = await supabase
+          .from('user_credits')
+          .insert({ user_id: user.id, credits: SIGNED_IN_CREDITS })
+          .select('credits')
+          .single();
+
+        if (!insertError && newData) {
+          setCredits(newData.credits);
         }
-      } else if (data) {
+      } else {
         setCredits(data.credits);
       }
     } catch (err) {
@@ -49,8 +71,16 @@ export const useCredits = () => {
   }, [fetchCredits]);
 
   const deductCredit = useCallback(async (): Promise<boolean> => {
-    if (!user || credits === null || credits <= 0) {
+    if (credits === null || credits <= 0) {
       return false;
+    }
+
+    if (!user) {
+      // Anonymous user - use localStorage
+      const newCredits = credits - 1;
+      setAnonymousCredits(newCredits);
+      setCredits(newCredits);
+      return true;
     }
 
     try {
