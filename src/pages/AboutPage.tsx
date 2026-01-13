@@ -136,7 +136,7 @@ export default function AboutPage() {
             icon: Sparkles
           }].map(item => <motion.div key={item.step} variants={fadeInUp} className="relative">
                 <div className="bg-card rounded-2xl p-8 h-full shadow-card border border-border">
-                  <div className="text-6xl font-display font-bold text-primary/10 absolute top-4 right-6">
+                  <div className="text-6xl font-display font-bold absolute top-4 right-6 text-slate-900">
                     {item.step}
                   </div>
                   <div className="w-14 h-14 rounded-xl gradient-primary flex items-center justify-center mb-6">
