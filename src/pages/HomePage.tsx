@@ -1,333 +1,242 @@
-import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
 import { Layout } from "@/components/layout/Layout";
+import { Button } from "@/components/ui/button";
+import { motion } from "framer-motion";
 import { 
-  Sparkles, 
-  Leaf, 
-  Heart, 
-  Shield, 
   ArrowRight, 
-  Brain, 
-  Activity,
+  Sparkles, 
+  Shield, 
+  Clock, 
+  Leaf,
+  Heart,
   Users,
-  MessageSquare,
-  CheckCircle,
-  Zap
+  Zap,
+  CheckCircle2,
+  MessageCircle
 } from "lucide-react";
 import heroBg from "@/assets/hero-bg.jpg";
 
-const fadeInUp = {
-  hidden: { opacity: 0, y: 20 },
+const fadeIn = {
+  hidden: { opacity: 0, y: 16 },
   visible: { opacity: 1, y: 0 }
 };
 
-const staggerContainer = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: { staggerChildren: 0.1 }
-  }
+const stagger = {
+  visible: { transition: { staggerChildren: 0.1, delayChildren: 0.1 } }
 };
+
+const principles = [
+  {
+    icon: Leaf,
+    title: "Like Cures Like",
+    description: "A substance that causes symptoms in a healthy person can treat similar symptoms in illness."
+  },
+  {
+    icon: Zap,
+    title: "Minimum Dose",
+    description: "Highly diluted remedies stimulate the body's natural healing response gently and effectively."
+  },
+  {
+    icon: Heart,
+    title: "Whole Person",
+    description: "Treatment considers physical, emotional, and mental aspects for truly personalized care."
+  }
+];
+
+const benefits = [
+  { value: "100%", label: "Natural", desc: "Plant & mineral based" },
+  { value: "200+", label: "Years", desc: "Of holistic practice" },
+  { value: "5M+", label: "Users", desc: "Trust homeopathy" },
+  { value: "24/7", label: "Available", desc: "AI-powered support" }
+];
 
 export default function HomePage() {
   return (
     <Layout>
       {/* Hero Section */}
-      <section className="relative min-h-[85vh] sm:min-h-[90vh] flex items-center overflow-hidden">
+      <section className="relative min-h-[90vh] flex items-center">
         {/* Background */}
         <div 
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          className="absolute inset-0 bg-cover bg-center"
           style={{ backgroundImage: `url(${heroBg})` }}
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-background/98 via-background/85 to-background/40 sm:from-background/95 sm:via-background/80 sm:to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-r from-background via-background/90 to-background/60" />
         
-        {/* Decorative elements */}
-        <motion.div 
-          className="absolute top-20 right-20 w-72 h-72 bg-primary/10 rounded-full blur-3xl hidden lg:block"
-          animate={{ 
-            scale: [1, 1.1, 1],
-            opacity: [0.3, 0.5, 0.3]
-          }}
-          transition={{ duration: 8, repeat: Infinity }}
-        />
-        <motion.div 
-          className="absolute bottom-20 left-1/3 w-48 h-48 bg-primary/5 rounded-full blur-3xl hidden lg:block"
-          animate={{ 
-            scale: [1.1, 1, 1.1],
-            opacity: [0.2, 0.4, 0.2]
-          }}
-          transition={{ duration: 6, repeat: Infinity }}
-        />
+        {/* Subtle decorative elements */}
+        <div className="absolute top-1/4 right-1/4 w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/3 right-1/3 w-48 h-48 bg-accent/30 rounded-full blur-3xl" />
         
         <div className="container mx-auto px-4 relative z-10">
-          <div className="max-w-3xl">
+          <div className="max-w-2xl">
             <motion.div
               initial="hidden"
               animate="visible"
-              variants={staggerContainer}
-              className="space-y-5 sm:space-y-6"
+              variants={stagger}
+              className="space-y-6"
             >
               {/* Badge */}
-              <motion.div variants={fadeInUp}>
-                <motion.span 
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary/80 backdrop-blur-sm text-secondary-foreground text-xs sm:text-sm font-medium border border-primary/10"
-                  whileHover={{ scale: 1.02, y: -2 }}
-                >
-                  <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
+              <motion.div variants={fadeIn}>
+                <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-secondary text-secondary-foreground text-sm font-medium border border-border">
+                  <Sparkles className="w-3.5 h-3.5 text-primary" />
                   AI-Powered Homeopathy
-                </motion.span>
+                </span>
               </motion.div>
 
               {/* Heading */}
               <motion.h1 
-                variants={fadeInUp}
-                className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-display font-bold text-foreground leading-tight"
+                variants={fadeIn}
+                className="text-4xl sm:text-5xl md:text-6xl font-display font-bold text-foreground leading-[1.1]"
               >
-                Natural Healing{" "}
-                <span className="text-gradient">Meets Intelligence</span>
+                Natural Healing,{" "}
+                <span className="text-primary">Modern Wisdom</span>
               </motion.h1>
 
               {/* Subtitle */}
               <motion.p 
-                variants={fadeInUp}
-                className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-xl"
+                variants={fadeIn}
+                className="text-lg text-muted-foreground max-w-xl leading-relaxed"
               >
                 Your personal AI homeopathic consultant. Get instant, natural remedy 
-                suggestions tailored to your specific symptoms, backed by centuries 
-                of holistic wisdom.
+                suggestions tailored to your symptoms—backed by centuries of holistic practice.
               </motion.p>
 
-              {/* CTA Buttons */}
+              {/* CTAs */}
               <motion.div 
-                variants={fadeInUp}
-                className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-2 sm:pt-4"
+                variants={fadeIn}
+                className="flex flex-col sm:flex-row gap-3 pt-2"
               >
-                <Link to="/ai-treatment" className="w-full sm:w-auto">
-                  <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                    <Button variant="hero" size="xl" className="w-full sm:w-auto shadow-glow">
-                      Start AI Consultation
-                      <ArrowRight className="w-5 h-5" />
-                    </Button>
-                  </motion.div>
+                <Link to="/ai-treatment">
+                  <Button variant="hero" size="xl" className="w-full sm:w-auto gap-2">
+                    <MessageCircle className="w-4 h-4" />
+                    Start Consultation
+                    <ArrowRight className="w-4 h-4" />
+                  </Button>
                 </Link>
-                <Link to="/diseases" className="w-full sm:w-auto">
-                  <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                    <Button variant="hero-outline" size="xl" className="w-full sm:w-auto">
-                      Browse Disease
-                    </Button>
-                  </motion.div>
+                <Link to="/diseases">
+                  <Button variant="hero-outline" size="xl" className="w-full sm:w-auto">
+                    Browse Diseases
+                  </Button>
                 </Link>
               </motion.div>
-              
+
               {/* Quick stats */}
               <motion.div 
-                variants={fadeInUp}
-                className="flex flex-wrap items-center gap-4 sm:gap-6 pt-4 sm:pt-6 text-sm text-muted-foreground"
+                variants={fadeIn}
+                className="flex flex-wrap gap-6 pt-6"
               >
-                <div className="flex items-center gap-2">
-                  <Zap className="w-4 h-4 text-primary" />
-                  <span>Instant Analysis</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Shield className="w-4 h-4 text-primary" />
-                  <span>100% Private</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <MessageSquare className="w-4 h-4 text-primary" />
-                  <span>24/7 Available</span>
-                </div>
+                {[
+                  { icon: Zap, text: "Instant Analysis" },
+                  { icon: Shield, text: "100% Private" },
+                  { icon: Clock, text: "Always Available" }
+                ].map((item) => (
+                  <div key={item.text} className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <item.icon className="w-4 h-4 text-primary" />
+                    <span>{item.text}</span>
+                  </div>
+                ))}
               </motion.div>
             </motion.div>
           </div>
         </div>
-
-        {/* Floating Feature Card */}
-        <motion.div
-          initial={{ opacity: 0, x: 50, y: 20 }}
-          animate={{ opacity: 1, x: 0, y: 0 }}
-          transition={{ delay: 0.6, duration: 0.6 }}
-          className="absolute right-8 bottom-24 hidden lg:block"
-        >
-          <motion.div 
-            className="bg-card/95 backdrop-blur-md rounded-2xl p-6 shadow-elevated border border-border max-w-xs"
-            whileHover={{ y: -4, scale: 1.02 }}
-            transition={{ duration: 0.3 }}
-          >
-            <div className="flex items-start gap-4">
-              <motion.div 
-                className="w-12 h-12 rounded-xl gradient-primary flex items-center justify-center shadow-soft"
-                whileHover={{ rotate: 5 }}
-              >
-                <Heart className="w-6 h-6 text-primary-foreground" />
-              </motion.div>
-              <div>
-                <h4 className="font-semibold text-foreground mb-1">Personalized Care</h4>
-                <p className="text-sm text-muted-foreground">
-                  Adapts to your unique symptoms and lifestyle.
-                </p>
-              </div>
-            </div>
-          </motion.div>
-        </motion.div>
       </section>
 
-      {/* What is Homeopathy Section */}
-      <section className="py-20 md:py-28 bg-muted/30">
+      {/* Principles Section */}
+      <section className="py-20 md:py-28 bg-secondary/30">
         <div className="container mx-auto px-4">
           <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-100px" }}
-            variants={staggerContainer}
-            className="text-center max-w-3xl mx-auto mb-16"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="text-center max-w-2xl mx-auto mb-14"
           >
-            <motion.span 
-              variants={fadeInUp}
-              className="text-primary font-medium text-sm uppercase tracking-wider"
-            >
-              Understanding Homeopathy
-            </motion.span>
-            <motion.h2 
-              variants={fadeInUp}
-              className="text-3xl md:text-4xl font-display font-bold text-foreground mt-4 mb-6"
-            >
-              What is Homeopathy?
-            </motion.h2>
-            <motion.p 
-              variants={fadeInUp}
-              className="text-muted-foreground text-lg"
-            >
-              Homeopathy is a natural system of medicine that uses highly diluted substances 
-              to stimulate the body's own healing mechanisms. Founded over 200 years ago, 
-              it treats the whole person—mind, body, and spirit.
-            </motion.p>
+            <h2 className="text-3xl md:text-4xl font-display font-bold text-foreground mb-4">
+              The Foundations of Homeopathy
+            </h2>
+            <p className="text-muted-foreground text-lg">
+              A gentle, holistic approach to healing that has helped millions worldwide for over two centuries.
+            </p>
           </motion.div>
 
-          {/* Principles */}
-          <motion.div 
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-50px" }}
-            variants={staggerContainer}
-            className="grid grid-cols-1 md:grid-cols-3 gap-8"
-          >
-            {[
-              {
-                icon: Leaf,
-                title: "Like Cures Like",
-                description: "A substance that causes symptoms in a healthy person can cure similar symptoms in a sick person when given in minute doses."
-              },
-              {
-                icon: Activity,
-                title: "Minimum Dose",
-                description: "The smallest dose possible is used to stimulate healing, minimizing side effects while maximizing therapeutic effect."
-              },
-              {
-                icon: Brain,
-                title: "Individualized Treatment",
-                description: "Each person is treated as unique. Remedies are selected based on the totality of symptoms—physical, mental, and emotional."
-              }
-            ].map((principle, index) => (
+          <div className="grid md:grid-cols-3 gap-6 md:gap-8">
+            {principles.map((principle, index) => (
               <motion.div
                 key={principle.title}
-                variants={fadeInUp}
-                className="group"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                className="bg-card rounded-2xl p-6 md:p-8 shadow-soft border border-border/50 card-interactive"
               >
-                <div className="bg-card rounded-2xl p-8 h-full shadow-card hover:shadow-elevated transition-all duration-300 border border-border group-hover:border-primary/20">
-                  <div className="w-14 h-14 rounded-xl gradient-primary flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                    <principle.icon className="w-7 h-7 text-primary-foreground" />
-                  </div>
-                  <h3 className="text-xl font-display font-semibold text-foreground mb-3">
-                    {principle.title}
-                  </h3>
-                  <p className="text-muted-foreground">
-                    {principle.description}
-                  </p>
+                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-5">
+                  <principle.icon className="w-6 h-6 text-primary" />
                 </div>
+                <h3 className="text-xl font-display font-semibold text-foreground mb-3">
+                  {principle.title}
+                </h3>
+                <p className="text-muted-foreground leading-relaxed">
+                  {principle.description}
+                </p>
               </motion.div>
             ))}
-          </motion.div>
+          </div>
         </div>
       </section>
 
       {/* Benefits Section */}
       <section className="py-20 md:py-28">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-            {/* Content */}
+          <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             <motion.div
-              initial="hidden"
-              whileInView="visible"
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
-              variants={staggerContainer}
+              transition={{ duration: 0.5 }}
             >
-              <motion.span 
-                variants={fadeInUp}
-                className="text-primary font-medium text-sm uppercase tracking-wider"
-              >
-                Why Choose Homeopathy
-              </motion.span>
-              <motion.h2 
-                variants={fadeInUp}
-                className="text-3xl md:text-4xl font-display font-bold text-foreground mt-4 mb-6"
-              >
+              <h2 className="text-3xl md:text-4xl font-display font-bold text-foreground mb-5">
                 Gentle, Natural, Effective
-              </motion.h2>
-              <motion.p 
-                variants={fadeInUp}
-                className="text-muted-foreground text-lg mb-8"
-              >
-                Homeopathy offers a holistic approach to health that works with your body's 
-                natural healing abilities, not against them.
-              </motion.p>
-
-              <motion.ul variants={staggerContainer} className="space-y-4">
+              </h2>
+              <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
+                Homeopathy works with your body's natural healing abilities, offering 
+                a safe alternative for the whole family—from infants to elderly.
+              </p>
+              
+              <ul className="space-y-4">
                 {[
-                  "Safe for all ages—from infants to elderly",
-                  "No known side effects when properly prescribed",
-                  "Treats the root cause, not just symptoms",
-                  "Works alongside conventional medicine",
-                  "Affordable and accessible remedies"
-                ].map((benefit) => (
-                  <motion.li 
-                    key={benefit}
-                    variants={fadeInUp}
-                    className="flex items-start gap-3"
-                  >
-                    <CheckCircle className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
-                    <span className="text-foreground">{benefit}</span>
-                  </motion.li>
+                  "Safe for all ages including infants and pregnant women",
+                  "No known harmful side effects or drug interactions",
+                  "Addresses root causes, not just symptoms",
+                  "Personalized treatment for your unique constitution"
+                ].map((item) => (
+                  <li key={item} className="flex items-start gap-3">
+                    <CheckCircle2 className="w-5 h-5 text-primary mt-0.5 shrink-0" />
+                    <span className="text-foreground">{item}</span>
+                  </li>
                 ))}
-              </motion.ul>
+              </ul>
             </motion.div>
 
-            {/* Feature Cards */}
             <motion.div
-              initial="hidden"
-              whileInView="visible"
+              initial={{ opacity: 0, x: 20 }}
+              whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
-              variants={staggerContainer}
+              transition={{ duration: 0.5 }}
               className="grid grid-cols-2 gap-4"
             >
-              {[
-                { icon: Shield, title: "Safe & Natural", value: "100%", desc: "Natural ingredients" },
-                { icon: Users, title: "Trusted By", value: "500M+", desc: "People worldwide" },
-                { icon: Activity, title: "Conditions", value: "1000+", desc: "Conditions treated" },
-                { icon: MessageSquare, title: "AI Support", value: "24/7", desc: "Always available" }
-              ].map((stat, index) => (
+              {benefits.map((stat, index) => (
                 <motion.div
-                  key={stat.title}
-                  variants={fadeInUp}
-                  className={`bg-card rounded-2xl p-6 shadow-card border border-border ${
-                    index === 1 || index === 2 ? "mt-8" : ""
-                  }`}
+                  key={stat.label}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.4, delay: index * 0.1 }}
+                  className="bg-card rounded-2xl p-6 text-center shadow-soft border border-border/50"
                 >
-                  <stat.icon className="w-8 h-8 text-primary mb-4" />
-                  <div className="text-2xl font-display font-bold text-foreground mb-1">
+                  <div className="text-3xl md:text-4xl font-display font-bold text-primary mb-1">
                     {stat.value}
                   </div>
-                  <p className="text-sm text-muted-foreground">{stat.desc}</p>
+                  <div className="font-semibold text-foreground mb-1">{stat.label}</div>
+                  <div className="text-sm text-muted-foreground">{stat.desc}</div>
                 </motion.div>
               ))}
             </motion.div>
@@ -336,43 +245,23 @@ export default function HomePage() {
       </section>
 
       {/* Trust Section */}
-      <section className="py-20 md:py-28 bg-secondary/50">
+      <section className="py-16 md:py-20 bg-accent/30">
         <div className="container mx-auto px-4">
           <motion.div
-            initial="hidden"
-            whileInView="visible"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            variants={staggerContainer}
-            className="text-center max-w-3xl mx-auto"
+            className="max-w-3xl mx-auto text-center"
           >
-            <motion.div variants={fadeInUp}>
-              <Shield className="w-16 h-16 text-primary mx-auto mb-6" />
-            </motion.div>
-            <motion.h2 
-              variants={fadeInUp}
-              className="text-3xl md:text-4xl font-display font-bold text-foreground mb-6"
-            >
-              Your Safety is Our Priority
-            </motion.h2>
-            <motion.p 
-              variants={fadeInUp}
-              className="text-muted-foreground text-lg mb-8"
-            >
-              Our AI provides educational information and general guidance based on homeopathic 
-              principles. We're here to complement, not replace, professional healthcare.
-            </motion.p>
-            
-            <motion.div 
-              variants={fadeInUp}
-              className="bg-card rounded-2xl p-8 shadow-card border border-border"
-            >
-              <p className="text-foreground font-medium mb-4">Medical Disclaimer</p>
-              <p className="text-muted-foreground text-sm">
-                This platform provides educational information only and does not replace professional 
-                medical advice, diagnosis, or treatment. Always consult a licensed healthcare provider 
-                before making health decisions or taking any medication.
-              </p>
-            </motion.div>
+            <div className="inline-flex items-center gap-2 mb-4">
+              <Shield className="w-5 h-5 text-primary" />
+              <span className="font-medium text-foreground">Your Safety Matters</span>
+            </div>
+            <p className="text-muted-foreground leading-relaxed">
+              This platform provides educational information about homeopathy and natural remedies. 
+              It does not replace professional medical advice, diagnosis, or treatment. 
+              Always consult a licensed healthcare provider for serious health concerns.
+            </p>
           </motion.div>
         </div>
       </section>
@@ -381,33 +270,26 @@ export default function HomePage() {
       <section className="py-20 md:py-28">
         <div className="container mx-auto px-4">
           <motion.div
-            initial="hidden"
-            whileInView="visible"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            variants={staggerContainer}
-            className="text-center"
+            className="bg-primary/5 rounded-3xl p-8 md:p-14 text-center border border-primary/10"
           >
-            <motion.h2 
-              variants={fadeInUp}
-              className="text-3xl md:text-4xl font-display font-bold text-foreground mb-6"
-            >
-              Ready to Explore Natural Healing?
-            </motion.h2>
-            <motion.p 
-              variants={fadeInUp}
-              className="text-muted-foreground text-lg mb-8 max-w-2xl mx-auto"
-            >
-              Start your journey towards holistic wellness with our AI-powered homeopathic 
-              consultation. It's free, private, and available 24/7.
-            </motion.p>
-            <motion.div variants={fadeInUp}>
+            <div className="max-w-2xl mx-auto">
+              <h2 className="text-3xl md:text-4xl font-display font-bold text-foreground mb-4">
+                Ready to Explore Natural Healing?
+              </h2>
+              <p className="text-lg text-muted-foreground mb-8">
+                Start a free consultation with our AI and discover personalized homeopathic remedies for your symptoms.
+              </p>
               <Link to="/ai-treatment">
-                <Button variant="hero" size="xl">
+                <Button variant="hero" size="xl" className="gap-2">
+                  <Sparkles className="w-4 h-4" />
                   Start Free Consultation
-                  <ArrowRight className="w-5 h-5" />
+                  <ArrowRight className="w-4 h-4" />
                 </Button>
               </Link>
-            </motion.div>
+            </div>
           </motion.div>
         </div>
       </section>
