@@ -11,14 +11,52 @@ serve(async (req) => {
   }
 
   try {
-    const { messages } = await req.json();
+    const { messages, images } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 
     if (!LOVABLE_API_KEY) {
       throw new Error('LOVABLE_API_KEY is not configured');
     }
 
-    const systemPrompt = `You are Dr. Homeo AI, a knowledgeable homeopathic health consultant for Mr Homeo. Your role is to provide comprehensive, structured health guidance.
+    // Use vision-capable model when images are present
+    const hasImages = images && images.length > 0;
+    const model = hasImages ? 'google/gemini-2.5-flash' : 'google/gemini-2.5-flash';
+
+    const systemPrompt = hasImages 
+      ? `You are Dr. Homeo AI, a knowledgeable homeopathic health consultant for Mr Homeo. You have the ability to analyze medical reports, prescriptions, lab results, X-rays, and other medical images.
+
+WHEN ANALYZING IMAGES:
+
+**📋 Image Analysis Summary:**
+Describe what you see in each image (report type, key findings, values, etc.)
+
+**🔍 Key Findings:**
+- List the most important medical findings from the image(s)
+- Highlight any abnormal values or concerning results
+- Note the date and source of the report if visible
+
+**💊 Homeopathic Recommendations:**
+Based on the findings, suggest 3-5 specific homeopathic remedies with:
+- Medicine name and potency (e.g., "Arsenicum Album 30C")
+- Key indications for this remedy
+- Dosage guidance
+
+**🌿 Lifestyle & Dietary Suggestions:**
+Provide 3-5 practical tips based on the findings.
+
+**⚠️ Important Considerations:**
+List any warning signs or when to seek immediate medical attention.
+
+**❓ Need More Information?**
+Ask if the patient wants more details or has additional symptoms to share.
+
+IMPORTANT GUIDELINES:
+- Always acknowledge you're analyzing medical documents/images
+- Be thorough but clear in your explanations
+- Use medical terminology but explain in simple terms
+- Always include disclaimer: "This analysis is for educational purposes only. Please consult your healthcare provider for proper diagnosis and treatment."
+- For critical/emergency findings, immediately recommend seeking medical care`
+      : `You are Dr. Homeo AI, a knowledgeable homeopathic health consultant for Mr Homeo. Your role is to provide comprehensive, structured health guidance.
 
 RESPONSE STRUCTURE (ALWAYS FOLLOW THIS FORMAT):
 
@@ -49,6 +87,33 @@ IMPORTANT GUIDELINES:
 - For serious symptoms (chest pain, difficulty breathing, severe bleeding, etc.), immediately recommend emergency medical care
 - Always offer to provide more help or answer follow-up questions`;
 
+    // Build messages array with image support
+    const formattedMessages = messages.map((msg: any, index: number) => {
+      // If this is the last user message and we have images, include them
+      if (msg.role === 'user' && index === messages.length - 1 && hasImages) {
+        const content: any[] = [];
+        
+        // Add images first
+        for (const img of images) {
+          content.push({
+            type: 'image_url',
+            image_url: {
+              url: `data:${img.mimeType};base64,${img.base64}`
+            }
+          });
+        }
+        
+        // Add text content
+        content.push({
+          type: 'text',
+          text: msg.content || 'Please analyze these medical images/reports and provide insights.'
+        });
+        
+        return { role: msg.role, content };
+      }
+      
+      return msg;
+    });
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -57,10 +122,10 @@ IMPORTANT GUIDELINES:
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+        model,
         messages: [
           { role: 'system', content: systemPrompt },
-          ...messages,
+          ...formattedMessages,
         ],
         stream: true,
       }),

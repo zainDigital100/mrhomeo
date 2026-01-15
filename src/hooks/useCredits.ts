@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
 const ANONYMOUS_CREDITS_KEY = 'mr_homeo_anonymous_credits';
-const ANONYMOUS_MAX_CREDITS = 3;
+const ANONYMOUS_MAX_CREDITS = 15;
 const SIGNED_IN_CREDITS = 30;
 
 const getAnonymousCredits = (): number => {

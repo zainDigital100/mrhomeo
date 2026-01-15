@@ -19,8 +19,8 @@ import {
   Trash2,
   LogIn,
   ChevronLeft,
-  ChevronRight,
-  Coins
+  Coins,
+  ImageIcon
 } from "lucide-react";
 
 interface Message {
@@ -28,7 +28,10 @@ interface Message {
   role: "user" | "assistant";
   content: string;
   timestamp: Date;
+  images?: string[]; // Base64 image previews for display
 }
+
+const CREDITS_PER_IMAGE = 2;
 
 const initialMessage: Message = {
   id: "welcome",
@@ -40,10 +43,11 @@ const initialMessage: Message = {
 • Suggest possible conditions
 • Recommend homeopathic remedies
 • Provide lifestyle guidance
+• **📷 Analyze medical reports & images** (2 credits per image)
 
 **Please note:** I provide educational information only. Always consult a licensed healthcare provider for medical advice.
 
-How are you feeling today? Please describe your symptoms in detail.`,
+How are you feeling today? Please describe your symptoms or upload a medical report for analysis.`,
   timestamp: new Date()
 };
 
@@ -88,7 +92,10 @@ export default function AITreatmentPage() {
     loadConversationMessages();
   }, [currentConversationId, user]);
 
-  const streamChat = async (userMessages: { role: string; content: string }[]) => {
+  const streamChat = async (
+    userMessages: { role: string; content: string }[], 
+    images?: { base64: string; mimeType: string }[]
+  ) => {
     const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/homeopathy-chat`;
     
     const resp = await fetch(CHAT_URL, {
@@ -97,7 +104,7 @@ export default function AITreatmentPage() {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
       },
-      body: JSON.stringify({ messages: userMessages }),
+      body: JSON.stringify({ messages: userMessages, images }),
     });
 
     if (!resp.ok) {
@@ -154,24 +161,31 @@ export default function AITreatmentPage() {
     return fullContent;
   };
 
-  const handleSendMessage = async (content: string) => {
-    // Check if user has credits
-    if (!hasCredits) {
+  const handleSendMessage = async (content: string, images?: { base64: string; mimeType: string }[]) => {
+    const imageCount = images?.length || 0;
+    const creditsNeeded = imageCount > 0 ? imageCount * CREDITS_PER_IMAGE : 1;
+    
+    // Check if user has enough credits
+    if (credits !== null && credits < creditsNeeded) {
       toast({
-        title: "No credits remaining",
+        title: "Not enough credits",
         description: user 
-          ? "You've used all your credits. Please add more to continue."
-          : "Sign in to get 30 free credits!",
+          ? `You need ${creditsNeeded} credits but only have ${credits}. Images require ${CREDITS_PER_IMAGE} credits each.`
+          : `Sign in to get 15 free credits!`,
         variant: "destructive"
       });
       return;
     }
 
+    // Create image previews for display
+    const imageDataUrls = images?.map(img => `data:${img.mimeType};base64,${img.base64}`);
+
     const userMessage: Message = {
       id: Date.now().toString(),
       role: "user",
-      content,
-      timestamp: new Date()
+      content: content || (imageCount > 0 ? `Analyzing ${imageCount} image${imageCount > 1 ? 's' : ''}...` : ''),
+      timestamp: new Date(),
+      images: imageDataUrls
     };
 
     const assistantMessage: Message = {
@@ -190,7 +204,8 @@ export default function AITreatmentPage() {
     // Create conversation if user is signed in and no current conversation
     let conversationId = currentConversationId;
     if (user && !conversationId) {
-      conversationId = await createConversation(content.slice(0, 50));
+      const title = content?.slice(0, 50) || `Image analysis (${imageCount} image${imageCount > 1 ? 's' : ''})`;
+      conversationId = await createConversation(title);
     }
 
     try {
@@ -199,14 +214,29 @@ export default function AITreatmentPage() {
         .map(m => ({ role: m.role, content: m.content }));
       apiMessages.push({ role: "user", content: userMessage.content });
 
-      const aiResponse = await streamChat(apiMessages);
+      const aiResponse = await streamChat(apiMessages, images);
 
-      // Deduct credit
-      await deductCredit();
+      // Deduct credits based on images or text
+      if (imageCount > 0) {
+        for (let i = 0; i < imageCount; i++) {
+          await deductCredit();
+          await deductCredit(); // 2 credits per image
+        }
+      } else {
+        await deductCredit();
+      }
+
+      // Show remaining credits toast
+      if (imageCount > 0) {
+        toast({
+          title: "Analysis Complete",
+          description: `Used ${creditsNeeded} credits for ${imageCount} image${imageCount > 1 ? 's' : ''}.`,
+        });
+      }
 
       // Save messages if user is signed in
       if (user && conversationId) {
-        await saveMessage(conversationId, 'user', content);
+        await saveMessage(conversationId, 'user', userMessage.content);
         await saveMessage(conversationId, 'assistant', aiResponse);
       }
     } catch (error) {
@@ -349,8 +379,8 @@ export default function AITreatmentPage() {
                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
                         <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
                       </span>
-                      <p className="text-xs sm:text-sm text-muted-foreground">
-                        Online & Ready
+                      <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-1">
+                        Online <ImageIcon className="w-3 h-3 inline" /> Image Analysis
                       </p>
                     </div>
                   </div>
@@ -413,6 +443,7 @@ export default function AITreatmentPage() {
                 <p className="text-muted-foreground text-center">
                   <span className="hidden sm:inline">Educational information only. </span>
                   <span className="font-medium text-foreground">Not medical advice.</span>
+                  <span className="hidden md:inline text-primary ml-1">• Images: 2 credits each</span>
                 </p>
               </div>
             </div>
@@ -427,6 +458,23 @@ export default function AITreatmentPage() {
               <AnimatePresence mode="popLayout">
                 {messages.map((message, index) => (
                   <div key={message.id} className="mb-4 sm:mb-5">
+                    {/* Show images if present */}
+                    {message.images && message.images.length > 0 && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="flex flex-wrap gap-2 mb-2 justify-end"
+                      >
+                        {message.images.map((img, imgIndex) => (
+                          <img
+                            key={imgIndex}
+                            src={img}
+                            alt={`Uploaded image ${imgIndex + 1}`}
+                            className="max-w-[150px] max-h-[150px] rounded-lg border border-border object-cover"
+                          />
+                        ))}
+                      </motion.div>
+                    )}
                     <ChatMessage 
                       message={message} 
                       isTyping={isLoading && index === messages.length - 1 && message.role === "assistant" && message.content === ""}
@@ -445,12 +493,12 @@ export default function AITreatmentPage() {
                 >
                   <p className="text-xs text-muted-foreground mb-3 text-center">Try asking about:</p>
                   <div className="flex flex-wrap justify-center gap-2">
-                    {["Headache remedies", "Sleep issues", "Digestive problems", "Stress & anxiety"].map((prompt) => (
+                    {["Headache remedies", "Sleep issues", "Digestive problems", "📷 Upload a report"].map((prompt) => (
                       <motion.button
                         key={prompt}
                         whileHover={{ scale: 1.02, y: -2 }}
                         whileTap={{ scale: 0.98 }}
-                        onClick={() => handleSendMessage(prompt)}
+                        onClick={() => !prompt.includes("📷") && handleSendMessage(prompt)}
                         className="px-3 py-2 rounded-xl bg-card border border-border text-sm text-muted-foreground hover:text-foreground hover:border-primary/30 hover:shadow-soft transition-all flex items-center gap-1.5"
                       >
                         <MessageSquare className="w-3.5 h-3.5" />
@@ -467,6 +515,7 @@ export default function AITreatmentPage() {
           <ChatInput 
             onSendMessage={handleSendMessage} 
             isLoading={isLoading}
+            creditsPerImage={CREDITS_PER_IMAGE}
           />
         </div>
 
