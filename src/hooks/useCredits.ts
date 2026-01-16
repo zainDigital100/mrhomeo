@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 
 const ANONYMOUS_CREDITS_KEY = 'mr_homeo_anonymous_credits';
 const ANONYMOUS_MAX_CREDITS = 15;
-const SIGNED_IN_CREDITS = 30;
+const SIGNED_IN_CREDITS = 35;
 
 const getAnonymousCredits = (): number => {
   const stored = localStorage.getItem(ANONYMOUS_CREDITS_KEY);
