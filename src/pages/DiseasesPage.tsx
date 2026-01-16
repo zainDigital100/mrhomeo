@@ -129,7 +129,8 @@ export default function DiseasesPage() {
               variants={fadeInUp}
               className="text-base sm:text-lg text-muted-foreground mb-6 sm:mb-8 px-4"
             >
-              <span className="text-primary font-semibold">{diseases.length}+</span> conditions with homeopathic treatments
+              Explore our comprehensive collection of <span className="text-primary font-semibold">{diseases.length}+</span> health conditions and their 
+              homeopathic treatments.
             </motion.p>
 
             {/* Search Bar */}

@@ -93,7 +93,9 @@ export default function HomePage() {
                 variants={fadeInUp}
                 className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-xl"
               >
-                Get instant, personalized natural remedy suggestions for your symptoms.
+                Your personal AI homeopathic consultant. Get instant, natural remedy 
+                suggestions tailored to your specific symptoms, backed by centuries 
+                of holistic wisdom.
               </motion.p>
 
               {/* CTA Buttons */}
@@ -196,7 +198,9 @@ export default function HomePage() {
               variants={fadeInUp}
               className="text-muted-foreground text-lg"
             >
-              A natural healing system using highly diluted substances to stimulate your body's own healing.
+              Homeopathy is a natural system of medicine that uses highly diluted substances 
+              to stimulate the body's own healing mechanisms. Founded over 200 years ago, 
+              it treats the whole person—mind, body, and spirit.
             </motion.p>
           </motion.div>
 
@@ -212,17 +216,17 @@ export default function HomePage() {
               {
                 icon: Leaf,
                 title: "Like Cures Like",
-                description: "Similar symptoms in healthy people can cure the same in sick people with minute doses."
+                description: "A substance that causes symptoms in a healthy person can cure similar symptoms in a sick person when given in minute doses."
               },
               {
                 icon: Activity,
                 title: "Minimum Dose",
-                description: "Smallest effective dose for maximum healing with minimal side effects."
+                description: "The smallest dose possible is used to stimulate healing, minimizing side effects while maximizing therapeutic effect."
               },
               {
                 icon: Brain,
-                title: "Individualized",
-                description: "Unique treatment based on your complete physical, mental & emotional state."
+                title: "Individualized Treatment",
+                description: "Each person is treated as unique. Remedies are selected based on the totality of symptoms—physical, mental, and emotional."
               }
             ].map((principle, index) => (
               <motion.div
@@ -270,7 +274,15 @@ export default function HomePage() {
               >
                 Gentle, Natural, Effective
               </motion.h2>
-              <motion.ul variants={staggerContainer} className="space-y-4 mt-6">
+              <motion.p 
+                variants={fadeInUp}
+                className="text-muted-foreground text-lg mb-8"
+              >
+                Homeopathy offers a holistic approach to health that works with your body's 
+                natural healing abilities, not against them.
+              </motion.p>
+
+              <motion.ul variants={staggerContainer} className="space-y-4">
                 {[
                   "Safe for all ages—from infants to elderly",
                   "No known side effects when properly prescribed",
@@ -344,16 +356,22 @@ export default function HomePage() {
             </motion.h2>
             <motion.p 
               variants={fadeInUp}
-              className="text-muted-foreground mb-6"
+              className="text-muted-foreground text-lg mb-8"
             >
-              Educational guidance to complement professional healthcare.
+              Our AI provides educational information and general guidance based on homeopathic 
+              principles. We're here to complement, not replace, professional healthcare.
             </motion.p>
             
             <motion.div 
               variants={fadeInUp}
-              className="bg-card rounded-xl p-6 shadow-card border border-border text-sm text-muted-foreground"
+              className="bg-card rounded-2xl p-8 shadow-card border border-border"
             >
-              ⚠️ Educational only. Always consult a healthcare provider before making health decisions.
+              <p className="text-foreground font-medium mb-4">Medical Disclaimer</p>
+              <p className="text-muted-foreground text-sm">
+                This platform provides educational information only and does not replace professional 
+                medical advice, diagnosis, or treatment. Always consult a licensed healthcare provider 
+                before making health decisions or taking any medication.
+              </p>
             </motion.div>
           </motion.div>
         </div>
@@ -373,8 +391,15 @@ export default function HomePage() {
               variants={fadeInUp}
               className="text-3xl md:text-4xl font-display font-bold text-foreground mb-6"
             >
-              Ready to Get Started?
+              Ready to Explore Natural Healing?
             </motion.h2>
+            <motion.p 
+              variants={fadeInUp}
+              className="text-muted-foreground text-lg mb-8 max-w-2xl mx-auto"
+            >
+              Start your journey towards holistic wellness with our AI-powered homeopathic 
+              consultation. It's free, private, and available 24/7.
+            </motion.p>
             <motion.div variants={fadeInUp}>
               <Link to="/ai-treatment">
                 <Button variant="hero" size="xl">
