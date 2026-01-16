@@ -36,18 +36,11 @@ const CREDITS_PER_IMAGE = 2;
 const initialMessage: Message = {
   id: "welcome",
   role: "assistant",
-  content: `Hello! I'm your AI homeopathic consultant. I'm here to help you understand your symptoms and suggest natural remedies based on homeopathic principles.
+  content: `👋 Hello! I'm your AI homeopathic consultant.
 
-**How I can help:**
-• Analyze your symptoms
-• Suggest possible conditions
-• Recommend homeopathic remedies
-• Provide lifestyle guidance
-• **📷 Analyze medical reports & images** (2 credits per image)
+Tell me your symptoms or upload a medical report (📷 2 credits/image) for personalized guidance.
 
-**Please note:** I provide educational information only. Always consult a licensed healthcare provider for medical advice.
-
-How are you feeling today? Please describe your symptoms or upload a medical report for analysis.`,
+*Educational info only—consult a healthcare provider for medical advice.*`,
   timestamp: new Date()
 };
 

@@ -37,8 +37,7 @@ export default function AboutPage() {
             </motion.div>
             <motion.h1 variants={fadeInUp} className="text-4xl md:text-5xl font-display font-bold text-foreground mb-6">About Mr Homeo</motion.h1>
             <motion.p variants={fadeInUp} className="text-lg md:text-xl text-muted-foreground">
-              Bridging ancient healing wisdom with modern artificial intelligence 
-              to make natural health guidance accessible to everyone.
+              Ancient healing wisdom meets modern AI.
             </motion.p>
           </motion.div>
         </div>
@@ -57,15 +56,8 @@ export default function AboutPage() {
               <motion.h2 variants={fadeInUp} className="text-3xl md:text-4xl font-display font-bold text-foreground mt-4 mb-6">
                 Empowering Natural Health Choices
               </motion.h2>
-              <motion.p variants={fadeInUp} className="text-muted-foreground text-lg mb-6">
-                We believe everyone deserves access to holistic health information. 
-                Our platform combines the time-tested principles of homeopathy with 
-                cutting-edge AI technology to provide personalized, educational guidance.
-              </motion.p>
-              <motion.p variants={fadeInUp} className="text-muted-foreground">
-                We're not here to replace healthcare providers—we're here to complement 
-                your health journey with natural alternatives and educational resources 
-                that help you make informed decisions about your wellbeing.
+              <motion.p variants={fadeInUp} className="text-muted-foreground text-lg">
+                Combining homeopathic principles with AI to provide personalized, educational health guidance—complementing, not replacing, professional care.
               </motion.p>
             </motion.div>
 
@@ -111,8 +103,7 @@ export default function AboutPage() {
               AI-Powered Health Guidance
             </motion.h2>
             <motion.p variants={fadeInUp} className="text-muted-foreground text-lg">
-              Our AI system is trained on comprehensive homeopathic knowledge, 
-              allowing it to provide relevant, personalized educational information.
+              AI trained on comprehensive homeopathic knowledge.
             </motion.p>
           </motion.div>
 
@@ -121,18 +112,18 @@ export default function AboutPage() {
         }} variants={staggerContainer} className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[{
             step: "01",
-            title: "Share Your Symptoms",
-            description: "Describe how you're feeling using text or voice. The more detail you provide, the better guidance we can offer.",
+            title: "Share Symptoms",
+            description: "Describe how you're feeling or upload medical reports.",
             icon: MessageSquare
           }, {
             step: "02",
             title: "AI Analysis",
-            description: "Our AI analyzes your symptoms against extensive homeopathic knowledge to identify patterns and potential remedies.",
+            description: "AI identifies patterns and potential remedies.",
             icon: Brain
           }, {
             step: "03",
-            title: "Personalized Guidance",
-            description: "Receive educational information about possible conditions, suggested remedies, and lifestyle recommendations.",
+            title: "Get Guidance",
+            description: "Receive personalized remedy and lifestyle suggestions.",
             icon: Sparkles
           }].map(item => <motion.div key={item.step} variants={fadeInUp} className="relative">
                 <div className="bg-card rounded-2xl p-8 h-full shadow-card border border-border">
@@ -165,16 +156,12 @@ export default function AboutPage() {
               <h2 className="text-3xl md:text-4xl font-display font-bold text-foreground mb-4">
                 Ethics & Safety First
               </h2>
-              <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-                We take your health and safety seriously. Our platform is built 
-                with strict ethical guidelines to ensure responsible use.
-              </p>
             </motion.div>
 
-            <motion.div variants={staggerContainer} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {["We never claim to be a replacement for licensed medical professionals", "We never guarantee cures or make promises about health outcomes", "We do not handle medical emergencies—always call emergency services", "We recommend professional consultation for serious symptoms", "We use educational, informative language—never prescriptive", "We protect your privacy and never share personal health data", "We clearly label all information as educational, not medical advice", "We encourage users to verify information with healthcare providers"].map((item, index) => <motion.div key={index} variants={fadeInUp} className="flex items-start gap-3 bg-card rounded-xl p-4 border border-border">
+            <motion.div variants={staggerContainer} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {["Not a replacement for medical professionals", "No cure guarantees", "Call emergency services for emergencies", "Consult professionals for serious symptoms", "Educational only—never prescriptive", "Your privacy is protected"].map((item, index) => <motion.div key={index} variants={fadeInUp} className="flex items-start gap-3 bg-card rounded-xl p-4 border border-border">
                   <CheckCircle className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
-                  <span className="text-foreground">{item}</span>
+                  <span className="text-foreground text-sm">{item}</span>
                 </motion.div>)}
             </motion.div>
           </motion.div>
@@ -191,13 +178,8 @@ export default function AboutPage() {
               Our Vision
             </motion.span>
             <motion.h2 variants={fadeInUp} className="text-3xl md:text-4xl font-display font-bold text-foreground mt-4 mb-6">
-              A World of Informed Health Choices
+              Informed Health Choices for All
             </motion.h2>
-            <motion.p variants={fadeInUp} className="text-muted-foreground text-lg mb-8">
-              We envision a future where everyone has access to reliable, comprehensive 
-              information about natural health options. A world where AI and traditional 
-              wisdom work together to support human wellbeing.
-            </motion.p>
             <motion.div variants={fadeInUp} className="flex flex-wrap justify-center gap-4">
               <Link to="/ai-treatment">
                 <Button variant="hero" size="lg">
@@ -225,13 +207,9 @@ export default function AboutPage() {
             <motion.div variants={fadeInUp}>
               <Users className="w-12 h-12 text-primary mx-auto mb-6" />
             </motion.div>
-            <motion.h2 variants={fadeInUp} className="text-3xl font-display font-bold text-foreground mb-4">
-              We'd Love to Hear From You
+            <motion.h2 variants={fadeInUp} className="text-3xl font-display font-bold text-foreground mb-6">
+              Questions or Feedback?
             </motion.h2>
-            <motion.p variants={fadeInUp} className="text-muted-foreground mb-8">
-              Have questions, suggestions, or feedback? We're constantly improving 
-              our platform and your input helps us serve you better.
-            </motion.p>
             <motion.div variants={fadeInUp}>
               <a href="mailto:contact@holisticai.com">
                 <Button variant="secondary" size="lg">
