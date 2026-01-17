@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Bot, User } from "lucide-react";
 import { TypingIndicator } from "./TypingIndicator";
+import DOMPurify from "dompurify";
 
 interface Message {
   id: string;
@@ -67,10 +68,16 @@ export function ChatMessage({ message, isTyping }: ChatMessageProps) {
                 isAssistant ? "prose prose-sm max-w-none text-foreground" : ""
               }`}
               dangerouslySetInnerHTML={{ 
-                __html: message.content
-                  .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold">$1</strong>')
-                  .replace(/\n/g, '<br/>')
-                  .replace(/• /g, '<span class="text-primary">•</span> ')
+                __html: DOMPurify.sanitize(
+                  message.content
+                    .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold">$1</strong>')
+                    .replace(/\n/g, '<br/>')
+                    .replace(/• /g, '<span class="text-primary">•</span> '),
+                  { 
+                    ALLOWED_TAGS: ['strong', 'br', 'span', 'em', 'b', 'i', 'p'],
+                    ALLOWED_ATTR: ['class']
+                  }
+                )
               }}
             />
           )}
