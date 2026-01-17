@@ -37,6 +37,10 @@ const cardVariants = {
     opacity: 1, 
     y: 0, 
     scale: 1,
+  },
+  tap: {
+    scale: 0.98,
+    transition: { duration: 0.1 }
   }
 };
 
@@ -280,13 +284,23 @@ export default function DiseasesPage() {
                   >
                     <Link to={`/diseases/${disease.slug}`}>
                       <motion.article 
-                        className="bg-card rounded-2xl p-5 sm:p-6 h-full shadow-soft border border-border flex flex-col relative overflow-hidden"
+                        className="bg-card rounded-2xl p-5 sm:p-6 h-full shadow-soft border border-border flex flex-col relative overflow-hidden cursor-pointer"
                         whileHover={{ 
                           y: -4, 
                           boxShadow: "0 20px 50px -15px hsl(160 40% 40% / 0.18)",
                           borderColor: "hsl(160 84% 39% / 0.3)"
                         }}
-                        transition={{ duration: 0.3 }}
+                        whileTap={{ 
+                          scale: 0.97,
+                          y: 0,
+                          transition: { duration: 0.1 }
+                        }}
+                        transition={{ 
+                          duration: 0.3,
+                          type: "spring",
+                          stiffness: 400,
+                          damping: 25
+                        }}
                       >
                         {/* Hover glow effect */}
                         <motion.div
