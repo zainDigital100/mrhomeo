@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Layout } from "@/components/layout/Layout";
@@ -47,6 +47,7 @@ export default function DiseasesPage() {
   const [selectedLetter, setSelectedLetter] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
+  const resultsRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     fetchDiseases();
@@ -96,6 +97,11 @@ export default function DiseasesPage() {
   const handleLetterClick = (letter: string) => {
     setSelectedLetter(selectedLetter === letter ? null : letter);
     setSearchQuery("");
+    
+    // Scroll to results section after a brief delay to allow filtering
+    setTimeout(() => {
+      resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
   };
 
   return (
@@ -215,7 +221,7 @@ export default function DiseasesPage() {
       </section>
 
       {/* Results */}
-      <section className="py-8 sm:py-12 md:py-16">
+      <section ref={resultsRef} className="py-8 sm:py-12 md:py-16 scroll-mt-32">
         <div className="container mx-auto px-4">
           {/* Results Count */}
           <motion.div 
