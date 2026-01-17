@@ -68,7 +68,7 @@ export default function AITreatmentPage() {
     deleteConversation
   } = useChatHistory();
 
-  const { credits, deductCredit, hasCredits, isLoading: creditsLoading } = useCredits();
+  const { credits, deductCredit, hasCredits, isLoading: creditsLoading, refetch: refetchCredits } = useCredits();
   
   const { containerRef, scrollToBottom, forceScrollToBottom } = useSmartScroll<HTMLDivElement>({
     threshold: 200
@@ -216,14 +216,20 @@ export default function AITreatmentPage() {
 
       const aiResponse = await streamChat(apiMessages, images);
 
-      // Deduct credits based on images or text
-      if (imageCount > 0) {
-        for (let i = 0; i < imageCount; i++) {
+      // Credits are now deducted server-side for authenticated users
+      // Only deduct client-side for anonymous users
+      if (!user) {
+        if (imageCount > 0) {
+          for (let i = 0; i < imageCount; i++) {
+            await deductCredit();
+            await deductCredit(); // 2 credits per image
+          }
+        } else {
           await deductCredit();
-          await deductCredit(); // 2 credits per image
         }
       } else {
-        await deductCredit();
+        // Refresh credits from server for authenticated users
+        await refetchCredits();
       }
 
       // Show remaining credits toast

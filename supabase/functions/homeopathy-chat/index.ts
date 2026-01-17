@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -13,10 +14,73 @@ serve(async (req) => {
   try {
     const { messages, images } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
+    const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY');
+    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
     if (!LOVABLE_API_KEY) {
       throw new Error('LOVABLE_API_KEY is not configured');
     }
+
+    // Initialize Supabase clients
+    const supabaseAdmin = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
+
+    // Calculate credits needed
+    const creditsNeeded = images && images.length > 0 ? images.length * 2 : 1;
+    
+    // Check for authenticated user
+    const authHeader = req.headers.get('Authorization');
+    let userId: string | null = null;
+    
+    if (authHeader?.startsWith('Bearer ')) {
+      const token = authHeader.replace('Bearer ', '');
+      const { data, error } = await supabaseAdmin.auth.getClaims(token);
+      
+      if (!error && data?.claims) {
+        userId = data.claims.sub as string;
+        
+        // Server-side credit validation and deduction for authenticated users
+        const { data: userCredits, error: creditsError } = await supabaseAdmin
+          .from('user_credits')
+          .select('credits')
+          .eq('user_id', userId)
+          .single();
+        
+        if (creditsError) {
+          console.error('Error fetching credits:', creditsError);
+          return new Response(
+            JSON.stringify({ error: 'Failed to verify credits' }),
+            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+        
+        if (!userCredits || userCredits.credits < creditsNeeded) {
+          return new Response(
+            JSON.stringify({ error: 'Insufficient credits', required: creditsNeeded, available: userCredits?.credits || 0 }),
+            { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+        
+        // Deduct credits BEFORE processing the request
+        const { error: updateError } = await supabaseAdmin
+          .from('user_credits')
+          .update({ credits: userCredits.credits - creditsNeeded, updated_at: new Date().toISOString() })
+          .eq('user_id', userId);
+        
+        if (updateError) {
+          console.error('Error deducting credits:', updateError);
+          return new Response(
+            JSON.stringify({ error: 'Failed to deduct credits' }),
+            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+        
+        console.log(`Deducted ${creditsNeeded} credits from user ${userId}. Remaining: ${userCredits.credits - creditsNeeded}`);
+      }
+    }
+    
+    // Allow anonymous users with limited rate (they use localStorage credits which are not as secure, but acceptable for demo)
+    // For production, consider IP-based rate limiting for anonymous users
 
     // Use vision-capable model when images are present
     const hasImages = images && images.length > 0;
@@ -132,6 +196,23 @@ IMPORTANT GUIDELINES:
     });
 
     if (!response.ok) {
+      // If AI fails, refund credits for authenticated users
+      if (userId) {
+        const { data: currentCredits } = await supabaseAdmin
+          .from('user_credits')
+          .select('credits')
+          .eq('user_id', userId)
+          .single();
+        
+        if (currentCredits) {
+          await supabaseAdmin
+            .from('user_credits')
+            .update({ credits: currentCredits.credits + creditsNeeded, updated_at: new Date().toISOString() })
+            .eq('user_id', userId);
+          console.log(`Refunded ${creditsNeeded} credits to user ${userId} due to AI error`);
+        }
+      }
+
       if (response.status === 429) {
         return new Response(
           JSON.stringify({ error: 'Rate limit exceeded. Please try again in a moment.' }),
