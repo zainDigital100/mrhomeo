@@ -6,6 +6,62 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// In-memory rate limiting for anonymous users
+// Key: IP address, Value: { count: number, resetTime: number }
+const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
+
+const RATE_LIMIT_WINDOW_MS = 60 * 1000; // 1 minute window
+const MAX_ANONYMOUS_REQUESTS = 5; // Max 5 requests per minute for anonymous users
+
+function checkAnonymousRateLimit(clientIp: string): { allowed: boolean; remaining: number; resetIn: number } {
+  const now = Date.now();
+  const existing = rateLimitStore.get(clientIp);
+  
+  // Clean up old entries periodically (simple cleanup)
+  if (rateLimitStore.size > 10000) {
+    for (const [ip, data] of rateLimitStore.entries()) {
+      if (now > data.resetTime) {
+        rateLimitStore.delete(ip);
+      }
+    }
+  }
+  
+  if (!existing || now > existing.resetTime) {
+    // New window
+    rateLimitStore.set(clientIp, { count: 1, resetTime: now + RATE_LIMIT_WINDOW_MS });
+    return { allowed: true, remaining: MAX_ANONYMOUS_REQUESTS - 1, resetIn: RATE_LIMIT_WINDOW_MS };
+  }
+  
+  if (existing.count >= MAX_ANONYMOUS_REQUESTS) {
+    return { allowed: false, remaining: 0, resetIn: existing.resetTime - now };
+  }
+  
+  existing.count++;
+  return { allowed: true, remaining: MAX_ANONYMOUS_REQUESTS - existing.count, resetIn: existing.resetTime - now };
+}
+
+function getClientIp(req: Request): string {
+  // Check various headers for client IP (proxy scenarios)
+  const xForwardedFor = req.headers.get('x-forwarded-for');
+  if (xForwardedFor) {
+    // Take the first IP if there are multiple
+    return xForwardedFor.split(',')[0].trim();
+  }
+  
+  const xRealIp = req.headers.get('x-real-ip');
+  if (xRealIp) {
+    return xRealIp;
+  }
+  
+  const cfConnectingIp = req.headers.get('cf-connecting-ip');
+  if (cfConnectingIp) {
+    return cfConnectingIp;
+  }
+  
+  // Fallback to a generic identifier
+  return 'unknown';
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -31,6 +87,7 @@ serve(async (req) => {
     // Check for authenticated user
     const authHeader = req.headers.get('Authorization');
     let userId: string | null = null;
+    let isAuthenticated = false;
     
     if (authHeader?.startsWith('Bearer ')) {
       const token = authHeader.replace('Bearer ', '');
@@ -38,6 +95,7 @@ serve(async (req) => {
       
       if (!error && data?.claims) {
         userId = data.claims.sub as string;
+        isAuthenticated = true;
         
         // Server-side credit validation and deduction for authenticated users
         const { data: userCredits, error: creditsError } = await supabaseAdmin
@@ -79,8 +137,30 @@ serve(async (req) => {
       }
     }
     
-    // Allow anonymous users with limited rate (they use localStorage credits which are not as secure, but acceptable for demo)
-    // For production, consider IP-based rate limiting for anonymous users
+    // Apply rate limiting for anonymous users
+    if (!isAuthenticated) {
+      const clientIp = getClientIp(req);
+      const rateLimit = checkAnonymousRateLimit(clientIp);
+      
+      console.log(`Anonymous request from IP ${clientIp}: allowed=${rateLimit.allowed}, remaining=${rateLimit.remaining}`);
+      
+      if (!rateLimit.allowed) {
+        return new Response(
+          JSON.stringify({ 
+            error: 'Rate limit exceeded. Please try again in a moment or sign in for more requests.',
+            retryAfter: Math.ceil(rateLimit.resetIn / 1000)
+          }),
+          { 
+            status: 429, 
+            headers: { 
+              ...corsHeaders, 
+              'Content-Type': 'application/json',
+              'Retry-After': String(Math.ceil(rateLimit.resetIn / 1000))
+            } 
+          }
+        );
+      }
+    }
 
     // Use vision-capable model when images are present
     const hasImages = images && images.length > 0;
