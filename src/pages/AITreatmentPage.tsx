@@ -20,7 +20,8 @@ import {
   LogIn,
   ChevronLeft,
   Coins,
-  ImageIcon
+  ImageIcon,
+  User
 } from "lucide-react";
 
 interface Message {
@@ -312,6 +313,39 @@ export default function AITreatmentPage() {
             className="hidden md:block bg-muted/30 border-r border-border overflow-hidden flex-shrink-0"
           >
             <div className="w-[280px] h-full flex flex-col">
+              {/* Profile & Credits Section */}
+              <div className="p-4 border-b border-border">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-full gradient-primary flex items-center justify-center">
+                    <User className="w-5 h-5 text-primary-foreground" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground truncate">
+                      {user.email?.split('@')[0]}
+                    </p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {user.email}
+                    </p>
+                  </div>
+                </div>
+                
+                {/* Credits display in sidebar */}
+                {!creditsLoading && credits !== null && (
+                  <div className={`flex items-center justify-between p-2.5 rounded-lg ${
+                    credits > 0 ? 'bg-primary/10' : 'bg-destructive/10'
+                  }`}>
+                    <div className="flex items-center gap-2">
+                      <Coins className={`w-4 h-4 ${credits > 0 ? 'text-primary' : 'text-destructive'}`} />
+                      <span className="text-sm font-medium text-foreground">Credits</span>
+                    </div>
+                    <span className={`text-sm font-bold ${credits > 0 ? 'text-primary' : 'text-destructive'}`}>
+                      {credits}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* New Chat Button */}
               <div className="p-4 border-b border-border">
                 <Button 
                   onClick={handleNewChat}
@@ -322,7 +356,10 @@ export default function AITreatmentPage() {
                   New Chat
                 </Button>
               </div>
+
+              {/* Chat History */}
               <div className="flex-1 overflow-y-auto p-2">
+                <p className="text-xs text-muted-foreground px-2 py-1 mb-1">Your chats</p>
                 {conversations.length === 0 ? (
                   <p className="text-sm text-muted-foreground text-center py-8">
                     No chat history yet
@@ -422,18 +459,6 @@ export default function AITreatmentPage() {
                     <Sparkles className="w-3.5 h-3.5 text-primary" />
                     <span className="text-xs font-medium text-secondary-foreground">Powered by Gemini</span>
                   </div>
-                  
-                  {/* Credits display */}
-                  {!creditsLoading && credits !== null && (
-                    <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border ${
-                      credits > 0 ? 'bg-primary/10 border-primary/20' : 'bg-destructive/10 border-destructive/20'
-                    }`}>
-                      <Coins className={`w-3.5 h-3.5 ${credits > 0 ? 'text-primary' : 'text-destructive'}`} />
-                      <span className={`text-xs font-semibold ${credits > 0 ? 'text-primary' : 'text-destructive'}`}>
-                        {credits} credit{credits !== 1 ? 's' : ''}
-                      </span>
-                    </div>
-                  )}
                   
                   {/* Mobile history button */}
                   {user && (
@@ -572,15 +597,47 @@ export default function AITreatmentPage() {
                 transition={{ type: 'spring', damping: 25, stiffness: 200 }}
                 className="md:hidden fixed left-0 top-0 bottom-0 w-[280px] bg-background border-r border-border z-50 flex flex-col"
               >
-                <div className="p-4 border-b border-border flex items-center justify-between">
-                  <h2 className="font-semibold text-foreground">Chat History</h2>
-                  <button
-                    onClick={() => setShowHistory(false)}
-                    className="p-2 hover:bg-muted rounded-lg transition-colors"
-                  >
-                    <ChevronLeft className="w-5 h-5" />
-                  </button>
+                {/* Profile & Credits Section - Mobile */}
+                <div className="p-4 border-b border-border">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full gradient-primary flex items-center justify-center">
+                        <User className="w-5 h-5 text-primary-foreground" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-foreground truncate">
+                          {user.email?.split('@')[0]}
+                        </p>
+                        <p className="text-xs text-muted-foreground truncate">
+                          {user.email}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setShowHistory(false)}
+                      className="p-2 hover:bg-muted rounded-lg transition-colors"
+                    >
+                      <ChevronLeft className="w-5 h-5" />
+                    </button>
+                  </div>
+                  
+                  {/* Credits display in mobile sidebar */}
+                  {!creditsLoading && credits !== null && (
+                    <div className={`flex items-center justify-between p-2.5 rounded-lg ${
+                      credits > 0 ? 'bg-primary/10' : 'bg-destructive/10'
+                    }`}>
+                      <div className="flex items-center gap-2">
+                        <Coins className={`w-4 h-4 ${credits > 0 ? 'text-primary' : 'text-destructive'}`} />
+                        <span className="text-sm font-medium text-foreground">Credits</span>
+                      </div>
+                      <span className={`text-sm font-bold ${credits > 0 ? 'text-primary' : 'text-destructive'}`}>
+                        {credits}
+                      </span>
+                    </div>
+                  )}
                 </div>
+
+                {/* New Chat Button - Mobile */}
                 <div className="p-4 border-b border-border">
                   <Button 
                     onClick={() => { handleNewChat(); setShowHistory(false); }}
