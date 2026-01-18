@@ -33,10 +33,11 @@ interface Message {
 
 const CREDITS_PER_IMAGE = 2;
 
-const initialMessage: Message = {
+const getInitialMessage = (isSignedIn: boolean): Message => ({
   id: "welcome",
   role: "assistant",
-  content: `Hello! I'm your AI homeopathic consultant. I'm here to help you understand your symptoms and suggest natural remedies based on homeopathic principles.
+  content: isSignedIn
+    ? `Hello! I'm your AI homeopathic consultant. I'm here to help you understand your symptoms and suggest natural remedies based on homeopathic principles.
 
 **How I can help:**
 • Analyze your symptoms
@@ -47,16 +48,24 @@ const initialMessage: Message = {
 
 **Please note:** I provide educational information only. Always consult a licensed healthcare provider for medical advice.
 
-How are you feeling today? Please describe your symptoms or upload a medical report for analysis.`,
+How are you feeling today? Please describe your symptoms or upload a medical report for analysis.`
+    : `Hello! I'm your AI homeopathic consultant. I'm here to help you understand your symptoms and suggest natural remedies based on homeopathic principles.
+
+**How I can help:**
+• Analyze your symptoms
+• Suggest possible conditions
+• Recommend homeopathic remedies
+• Provide lifestyle guidance
+
+**Please note:** I provide educational information only. Always consult a licensed healthcare provider for medical advice.
+
+💡 **Sign in to unlock image analysis** and get more credits!
+
+How are you feeling today?`,
   timestamp: new Date()
-};
+});
 
 export default function AITreatmentPage() {
-  const [messages, setMessages] = useState<Message[]>([initialMessage]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [showHistory, setShowHistory] = useState(false);
-  const { toast } = useToast();
-  
   const {
     user,
     conversations,
@@ -67,7 +76,12 @@ export default function AITreatmentPage() {
     loadMessages,
     deleteConversation
   } = useChatHistory();
-
+  
+  const [messages, setMessages] = useState<Message[]>([getInitialMessage(!!user)]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [showHistory, setShowHistory] = useState(true); // Default to open for signed-in users
+  const { toast } = useToast();
+  
   const { credits, deductCredit, hasCredits, isLoading: creditsLoading, refetch: refetchCredits } = useCredits();
   
   const { containerRef, scrollToBottom, forceScrollToBottom } = useSmartScroll<HTMLDivElement>({
@@ -79,13 +93,24 @@ export default function AITreatmentPage() {
     scrollToBottom();
   }, [messages, scrollToBottom]);
 
+  // Update welcome message when auth state changes
+  useEffect(() => {
+    setMessages(prev => {
+      if (prev.length === 1 && prev[0].id === "welcome") {
+        return [getInitialMessage(!!user)];
+      }
+      // Update only the welcome message if it exists
+      return prev.map(m => m.id === "welcome" ? getInitialMessage(!!user) : m);
+    });
+  }, [user]);
+
   // Load messages when conversation changes
   useEffect(() => {
     const loadConversationMessages = async () => {
       if (currentConversationId && user) {
         const loadedMessages = await loadMessages(currentConversationId);
         if (loadedMessages.length > 0) {
-          setMessages([initialMessage, ...loadedMessages]);
+          setMessages([getInitialMessage(!!user), ...loadedMessages]);
         }
       }
     };
@@ -259,7 +284,7 @@ export default function AITreatmentPage() {
   };
 
   const handleNewChat = () => {
-    setMessages([initialMessage]);
+    setMessages([getInitialMessage(!!user)]);
     setCurrentConversationId(null);
   };
 
@@ -499,7 +524,10 @@ export default function AITreatmentPage() {
                 >
                   <p className="text-xs text-muted-foreground mb-3 text-center">Try asking about:</p>
                   <div className="flex flex-wrap justify-center gap-2">
-                    {["Headache remedies", "Sleep issues", "Digestive problems", "📷 Upload a report"].map((prompt) => (
+                    {(user 
+                      ? ["Headache remedies", "Sleep issues", "Digestive problems", "📷 Upload a report"]
+                      : ["Headache remedies", "Sleep issues", "Digestive problems", "Stress & anxiety"]
+                    ).map((prompt) => (
                       <motion.button
                         key={prompt}
                         whileHover={{ scale: 1.02, y: -2 }}
@@ -522,6 +550,7 @@ export default function AITreatmentPage() {
             onSendMessage={handleSendMessage} 
             isLoading={isLoading}
             creditsPerImage={CREDITS_PER_IMAGE}
+            allowImageUpload={!!user}
           />
         </div>
 

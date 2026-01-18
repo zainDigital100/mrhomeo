@@ -16,9 +16,10 @@ interface ChatInputProps {
   isLoading: boolean;
   disabled?: boolean;
   creditsPerImage?: number;
+  allowImageUpload?: boolean;
 }
 
-export function ChatInput({ onSendMessage, isLoading, disabled, creditsPerImage = 2 }: ChatInputProps) {
+export function ChatInput({ onSendMessage, isLoading, disabled, creditsPerImage = 2, allowImageUpload = true }: ChatInputProps) {
   const [inputValue, setInputValue] = useState("");
   const [isListening, setIsListening] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
@@ -276,24 +277,26 @@ export function ChatInput({ onSendMessage, isLoading, disabled, creditsPerImage 
             
             {/* Actions */}
             <div className="absolute right-2 bottom-2 flex items-center gap-1.5 sm:gap-2">
-              {/* Image Upload Button */}
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={isLoading || isProcessingImages}
-                  className="h-8 w-8 sm:h-9 sm:w-9 rounded-xl text-muted-foreground hover:text-primary hover:bg-primary/10"
-                  aria-label="Upload images"
-                >
-                  {isProcessingImages ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <ImagePlus className="w-4 h-4" />
-                  )}
-                </Button>
-              </motion.div>
+              {/* Image Upload Button - Only show if allowed */}
+              {allowImageUpload && (
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isLoading || isProcessingImages}
+                    className="h-8 w-8 sm:h-9 sm:w-9 rounded-xl text-muted-foreground hover:text-primary hover:bg-primary/10"
+                    aria-label="Upload images"
+                  >
+                    {isProcessingImages ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <ImagePlus className="w-4 h-4" />
+                    )}
+                  </Button>
+                </motion.div>
+              )}
 
               {/* Voice Button */}
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
@@ -378,7 +381,12 @@ export function ChatInput({ onSendMessage, isLoading, disabled, creditsPerImage 
           className="flex items-center justify-center gap-2 mt-2.5 text-[10px] sm:text-xs text-muted-foreground"
         >
           <Sparkles className="w-3 h-3 text-primary" />
-          <span>Upload medical reports/images ({creditsPerImage} credits each) • Voice input available</span>
+          <span>
+            {allowImageUpload 
+              ? `Upload medical reports/images (${creditsPerImage} credits each) • Voice input available`
+              : "Voice input available • Sign in to upload images"
+            }
+          </span>
         </motion.div>
       </div>
     </motion.div>
