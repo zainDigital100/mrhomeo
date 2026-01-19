@@ -7,8 +7,10 @@ import { ChatInput } from "@/components/chat/ChatInput";
 import { useSmartScroll } from "@/hooks/useSmartScroll";
 import { useChatHistory } from "@/hooks/useChatHistory";
 import { useCredits } from "@/hooks/useCredits";
+import { useProfile } from "@/hooks/useProfile";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
+import { SettingsDialog } from "@/components/settings/SettingsDialog";
 import { 
   Bot, 
   Sparkles,
@@ -20,8 +22,8 @@ import {
   LogIn,
   ChevronLeft,
   Coins,
-  ImageIcon,
-  User
+  User,
+  Settings
 } from "lucide-react";
 
 interface Message {
@@ -81,9 +83,11 @@ export default function AITreatmentPage() {
   const [messages, setMessages] = useState<Message[]>([getInitialMessage(!!user)]);
   const [isLoading, setIsLoading] = useState(false);
   const [showHistory, setShowHistory] = useState(true); // Default to open for signed-in users
+  const [showSettings, setShowSettings] = useState(false);
   const { toast } = useToast();
   
   const { credits, deductCredit, hasCredits, isLoading: creditsLoading, refetch: refetchCredits } = useCredits();
+  const { profile } = useProfile();
   
   const { containerRef, scrollToBottom, forceScrollToBottom } = useSmartScroll<HTMLDivElement>({
     threshold: 200
@@ -321,12 +325,24 @@ export default function AITreatmentPage() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-foreground truncate">
-                      {user.email?.split('@')[0]}
+                      {profile?.full_name || user.email?.split('@')[0]}
                     </p>
                     <p className="text-xs text-muted-foreground truncate">
                       {user.email}
                     </p>
+                    {profile?.age && (
+                      <p className="text-xs text-muted-foreground">
+                        {profile.age} years old
+                      </p>
+                    )}
                   </div>
+                  <button
+                    onClick={() => setShowSettings(true)}
+                    className="p-2 hover:bg-muted rounded-lg transition-colors"
+                    title="Settings"
+                  >
+                    <Settings className="w-4 h-4 text-muted-foreground" />
+                  </button>
                 </div>
                 
                 {/* Credits display in sidebar */}
@@ -447,8 +463,8 @@ export default function AITreatmentPage() {
                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
                         <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
                       </span>
-                      <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-1">
-                        Online <ImageIcon className="w-3 h-3 inline" /> Image Analysis
+                      <p className="text-xs sm:text-sm text-muted-foreground">
+                        Online {user && "• Image Analysis"}
                       </p>
                     </div>
                   </div>
@@ -499,7 +515,7 @@ export default function AITreatmentPage() {
                 <p className="text-muted-foreground text-center">
                   <span className="hidden sm:inline">Educational information only. </span>
                   <span className="font-medium text-foreground">Not medical advice.</span>
-                  <span className="hidden md:inline text-primary ml-1">• Images: 2 credits each</span>
+                  {user && <span className="hidden md:inline text-primary ml-1">• Images: 2 credits each</span>}
                 </p>
               </div>
             </div>
@@ -606,19 +622,33 @@ export default function AITreatmentPage() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-foreground truncate">
-                          {user.email?.split('@')[0]}
+                          {profile?.full_name || user.email?.split('@')[0]}
                         </p>
                         <p className="text-xs text-muted-foreground truncate">
                           {user.email}
                         </p>
+                        {profile?.age && (
+                          <p className="text-xs text-muted-foreground">
+                            {profile.age} years old
+                          </p>
+                        )}
                       </div>
                     </div>
-                    <button
-                      onClick={() => setShowHistory(false)}
-                      className="p-2 hover:bg-muted rounded-lg transition-colors"
-                    >
-                      <ChevronLeft className="w-5 h-5" />
-                    </button>
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => { setShowHistory(false); setShowSettings(true); }}
+                        className="p-2 hover:bg-muted rounded-lg transition-colors"
+                        title="Settings"
+                      >
+                        <Settings className="w-4 h-4 text-muted-foreground" />
+                      </button>
+                      <button
+                        onClick={() => setShowHistory(false)}
+                        className="p-2 hover:bg-muted rounded-lg transition-colors"
+                      >
+                        <ChevronLeft className="w-5 h-5" />
+                      </button>
+                    </div>
                   </div>
                   
                   {/* Credits display in mobile sidebar */}
@@ -691,6 +721,9 @@ export default function AITreatmentPage() {
             </>
           )}
         </AnimatePresence>
+
+        {/* Settings Dialog */}
+        <SettingsDialog open={showSettings} onOpenChange={setShowSettings} />
       </div>
     </Layout>
   );
