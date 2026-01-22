@@ -489,13 +489,26 @@ export default function AITreatmentPage() {
                   )}
                   
                   {!user && (
-                    <Link to="/auth">
-                      <Button variant="outline" size="sm" className="gap-1.5">
-                        <LogIn className="w-3.5 h-3.5" />
-                        <span className="hidden sm:inline">Sign in to save</span>
-                        <span className="sm:hidden">Sign in</span>
-                      </Button>
-                    </Link>
+                    <div className="flex items-center gap-2">
+                      {/* Credits display for anonymous users */}
+                      {!creditsLoading && credits !== null && (
+                        <div className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-full ${
+                          credits > 0 ? 'bg-primary/10' : 'bg-destructive/10'
+                        }`}>
+                          <Coins className={`w-3.5 h-3.5 ${credits > 0 ? 'text-primary' : 'text-destructive'}`} />
+                          <span className={`text-xs font-bold ${credits > 0 ? 'text-primary' : 'text-destructive'}`}>
+                            {credits}
+                          </span>
+                        </div>
+                      )}
+                      <Link to="/auth">
+                        <Button variant="outline" size="sm" className="gap-1.5">
+                          <LogIn className="w-3.5 h-3.5" />
+                          <span className="hidden sm:inline">Sign in to save</span>
+                          <span className="sm:hidden">Sign in</span>
+                        </Button>
+                      </Link>
+                    </div>
                   )}
                 </div>
               </div>
