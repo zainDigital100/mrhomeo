@@ -25,7 +25,6 @@ import {
   Sparkles,
   History,
   User,
-  Phone,
   Calendar
 } from "lucide-react";
 import { z } from "zod";
@@ -33,10 +32,7 @@ import { z } from "zod";
 const emailSchema = z.string().email("Please enter a valid email address");
 const passwordSchema = z.string().min(6, "Password must be at least 6 characters");
 const fullNameSchema = z.string().min(2, "Name must be at least 2 characters").optional().or(z.literal(""));
-const ageSchema = z.string().refine(val => !val || (parseInt(val) >= 1 && parseInt(val) <= 150), {
-  message: "Age must be between 1 and 150"
-}).optional();
-const phoneSchema = z.string().optional();
+const dateOfBirthSchema = z.string().optional();
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 20 },
@@ -48,16 +44,14 @@ export default function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
-  const [age, setAge] = useState("");
+  const [dateOfBirth, setDateOfBirth] = useState("");
   const [gender, setGender] = useState("");
-  const [phone, setPhone] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<{ 
     email?: string; 
     password?: string; 
     fullName?: string;
-    age?: string;
-    phone?: string;
+    dateOfBirth?: string;
   }>({});
   
   const { user, signIn, signUp } = useAuth();
@@ -89,13 +83,6 @@ export default function AuthPage() {
         const fullNameResult = fullNameSchema.safeParse(fullName);
         if (!fullNameResult.success) {
           newErrors.fullName = fullNameResult.error.errors[0].message;
-        }
-      }
-      
-      if (age) {
-        const ageResult = ageSchema.safeParse(age);
-        if (!ageResult.success) {
-          newErrors.age = ageResult.error.errors[0].message;
         }
       }
     }
@@ -153,16 +140,15 @@ export default function AuthPage() {
           await new Promise(resolve => setTimeout(resolve, 500));
           
           // Update profile with additional data if provided
-          if (fullName || age || gender || phone) {
+          if (fullName || dateOfBirth || gender) {
             const { data: userData } = await supabase.auth.getUser();
             if (userData?.user) {
               await supabase
                 .from('profiles')
                 .update({
                   full_name: fullName || null,
-                  age: age ? parseInt(age) : null,
+                  date_of_birth: dateOfBirth || null,
                   gender: gender || null,
-                  phone: phone || null,
                 })
                 .eq('user_id', userData.user.id);
             }
@@ -334,31 +320,22 @@ export default function AuthPage() {
                     )}
                   </div>
 
-                  {/* Age & Gender Row */}
+                  {/* Date of Birth & Gender Row */}
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-2">
-                      <Label htmlFor="age" className="text-sm font-medium">
-                        Age
+                      <Label htmlFor="dateOfBirth" className="text-sm font-medium">
+                        Date of Birth
                       </Label>
                       <div className="relative">
                         <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                         <Input
-                          id="age"
-                          type="number"
-                          placeholder="25"
-                          min={1}
-                          max={150}
-                          value={age}
-                          onChange={(e) => {
-                            setAge(e.target.value);
-                            if (errors.age) setErrors(prev => ({ ...prev, age: undefined }));
-                          }}
-                          className={`pl-10 ${errors.age ? 'border-destructive' : ''}`}
+                          id="dateOfBirth"
+                          type="date"
+                          value={dateOfBirth}
+                          onChange={(e) => setDateOfBirth(e.target.value)}
+                          className="pl-10"
                         />
                       </div>
-                      {errors.age && (
-                        <p className="text-xs text-destructive">{errors.age}</p>
-                      )}
                     </div>
 
                     <div className="space-y-2">
@@ -376,24 +353,6 @@ export default function AuthPage() {
                           <SelectItem value="prefer_not_to_say">Prefer not to say</SelectItem>
                         </SelectContent>
                       </Select>
-                    </div>
-                  </div>
-
-                  {/* Phone */}
-                  <div className="space-y-2">
-                    <Label htmlFor="phone" className="text-sm font-medium">
-                      Phone Number
-                    </Label>
-                    <div className="relative">
-                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input
-                        id="phone"
-                        type="tel"
-                        placeholder="+1 (555) 000-0000"
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
-                        className="pl-10"
-                      />
                     </div>
                   </div>
                 </motion.div>

@@ -6,9 +6,8 @@ export interface Profile {
   id: string;
   user_id: string;
   full_name: string | null;
-  age: number | null;
+  date_of_birth: string | null;
   gender: string | null;
-  phone: string | null;
   health_conditions: string[] | null;
   created_at: string;
   updated_at: string;
