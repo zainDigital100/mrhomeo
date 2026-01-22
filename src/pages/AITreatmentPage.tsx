@@ -330,9 +330,9 @@ export default function AITreatmentPage() {
                     <p className="text-xs text-muted-foreground truncate">
                       {user.email}
                     </p>
-                    {profile?.age && (
+                    {profile?.date_of_birth && (
                       <p className="text-xs text-muted-foreground">
-                        {profile.age} years old
+                        Born: {new Date(profile.date_of_birth).toLocaleDateString()}
                       </p>
                     )}
                   </div>
@@ -640,9 +640,9 @@ export default function AITreatmentPage() {
                         <p className="text-xs text-muted-foreground truncate">
                           {user.email}
                         </p>
-                        {profile?.age && (
+                        {profile?.date_of_birth && (
                           <p className="text-xs text-muted-foreground">
-                            {profile.age} years old
+                            Born: {new Date(profile.date_of_birth).toLocaleDateString()}
                           </p>
                         )}
                       </div>

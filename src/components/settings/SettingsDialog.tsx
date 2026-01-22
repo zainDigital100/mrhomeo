@@ -33,9 +33,8 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   
   const [formData, setFormData] = useState({
     full_name: "",
-    age: "",
+    date_of_birth: "",
     gender: "",
-    phone: "",
   });
   const [isSaving, setIsSaving] = useState(false);
 
@@ -43,9 +42,8 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
     if (profile) {
       setFormData({
         full_name: profile.full_name || "",
-        age: profile.age?.toString() || "",
+        date_of_birth: profile.date_of_birth || "",
         gender: profile.gender || "",
-        phone: profile.phone || "",
       });
     }
   }, [profile]);
@@ -55,9 +53,8 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
     
     const updates: Partial<Profile> = {
       full_name: formData.full_name || null,
-      age: formData.age ? parseInt(formData.age) : null,
+      date_of_birth: formData.date_of_birth || null,
       gender: formData.gender || null,
-      phone: formData.phone || null,
     };
 
     const { error } = await updateProfile(updates);
@@ -127,18 +124,15 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
               />
             </div>
 
-            {/* Age */}
+            {/* Date of Birth */}
             <div className="space-y-2">
-              <Label htmlFor="age">Age</Label>
+              <Label htmlFor="date_of_birth">Date of Birth</Label>
               <Input
-                id="age"
-                type="number"
-                placeholder="Enter your age"
-                min={1}
-                max={150}
-                value={formData.age}
+                id="date_of_birth"
+                type="date"
+                value={formData.date_of_birth}
                 onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, age: e.target.value }))
+                  setFormData((prev) => ({ ...prev, date_of_birth: e.target.value }))
                 }
               />
             </div>
@@ -162,20 +156,6 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                   <SelectItem value="prefer_not_to_say">Prefer not to say</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
-
-            {/* Phone */}
-            <div className="space-y-2">
-              <Label htmlFor="phone">Phone Number</Label>
-              <Input
-                id="phone"
-                type="tel"
-                placeholder="Enter your phone number"
-                value={formData.phone}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, phone: e.target.value }))
-                }
-              />
             </div>
 
             {/* Actions */}
