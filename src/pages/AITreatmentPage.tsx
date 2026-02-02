@@ -13,7 +13,6 @@ import { Button } from "@/components/ui/button";
 import { SettingsDialog } from "@/components/settings/SettingsDialog";
 import { 
   Bot, 
-  Sparkles,
   MessageSquare,
   Shield,
   History,
@@ -547,10 +546,6 @@ export default function AITreatmentPage() {
                 </div>
                 
                 <div className="flex items-center gap-2">
-                  <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-secondary/60 border border-border">
-                    <Sparkles className="w-3.5 h-3.5 text-primary" />
-                    <span className="text-xs font-medium text-secondary-foreground">Powered by Gemini</span>
-                  </div>
                   
                   {/* Mobile history button */}
                   {user && (
