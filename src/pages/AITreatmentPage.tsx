@@ -23,7 +23,10 @@ import {
   ChevronLeft,
   Coins,
   User,
-  Settings
+  Settings,
+  Pencil,
+  Check,
+  X
 } from "lucide-react";
 
 interface Message {
@@ -77,13 +80,16 @@ export default function AITreatmentPage() {
     createConversation,
     saveMessage,
     loadMessages,
-    deleteConversation
+    deleteConversation,
+    loadConversations
   } = useChatHistory();
   
   const [messages, setMessages] = useState<Message[]>([getInitialMessage(!!user)]);
   const [isLoading, setIsLoading] = useState(false);
   const [showHistory, setShowHistory] = useState(true); // Default to open for signed-in users
   const [showSettings, setShowSettings] = useState(false);
+  const [editingConversationId, setEditingConversationId] = useState<string | null>(null);
+  const [editTitle, setEditTitle] = useState("");
   const { toast } = useToast();
   
   const { credits, deductCredit, hasCredits, isLoading: creditsLoading, refetch: refetchCredits } = useCredits();
@@ -306,6 +312,34 @@ export default function AITreatmentPage() {
     }
   };
 
+  const handleStartEdit = (conversationId: string, currentTitle: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditingConversationId(conversationId);
+    setEditTitle(currentTitle);
+  };
+
+  const handleSaveEdit = async (conversationId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (editTitle.trim()) {
+      const { supabase } = await import('@/integrations/supabase/client');
+      await supabase
+        .from('chat_conversations')
+        .update({ title: editTitle.trim() })
+        .eq('id', conversationId);
+      
+      // Reload conversations to get updated data
+      await loadConversations();
+    }
+    setEditingConversationId(null);
+    setEditTitle("");
+  };
+
+  const handleCancelEdit = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditingConversationId(null);
+    setEditTitle("");
+  };
+
   return (
     <Layout hideFooter>
       <div className="flex h-[calc(100vh-64px)] sm:h-[calc(100vh-80px)] md:h-[calc(100vh-80px)]">
@@ -385,7 +419,7 @@ export default function AITreatmentPage() {
                     {conversations.map((conv) => (
                       <motion.button
                         key={conv.id}
-                        onClick={() => handleLoadConversation(conv.id)}
+                        onClick={() => editingConversationId !== conv.id && handleLoadConversation(conv.id)}
                         className={`w-full text-left p-3 rounded-lg transition-colors group ${
                           currentConversationId === conv.id 
                             ? 'bg-primary/10 border border-primary/20' 
@@ -396,19 +430,61 @@ export default function AITreatmentPage() {
                       >
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-foreground truncate">
-                              {conv.title}
-                            </p>
+                            {editingConversationId === conv.id ? (
+                              <input
+                                type="text"
+                                value={editTitle}
+                                onChange={(e) => setEditTitle(e.target.value)}
+                                onClick={(e) => e.stopPropagation()}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') handleSaveEdit(conv.id, e as unknown as React.MouseEvent);
+                                  if (e.key === 'Escape') handleCancelEdit(e as unknown as React.MouseEvent);
+                                }}
+                                className="w-full text-sm font-medium text-foreground bg-background border border-primary rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-primary"
+                                autoFocus
+                              />
+                            ) : (
+                              <p className="text-sm font-medium text-foreground truncate">
+                                {conv.title}
+                              </p>
+                            )}
                             <p className="text-xs text-muted-foreground mt-0.5">
                               {new Date(conv.updated_at).toLocaleDateString()}
                             </p>
                           </div>
-                          <button
-                            onClick={(e) => handleDeleteConversation(conv.id, e)}
-                            className="opacity-0 group-hover:opacity-100 p-1 hover:bg-destructive/10 rounded transition-all"
-                          >
-                            <Trash2 className="w-3.5 h-3.5 text-destructive" />
-                          </button>
+                          <div className="flex items-center gap-0.5">
+                            {editingConversationId === conv.id ? (
+                              <>
+                                <button
+                                  onClick={(e) => handleSaveEdit(conv.id, e)}
+                                  className="p-1 hover:bg-primary/10 rounded transition-all"
+                                >
+                                  <Check className="w-3.5 h-3.5 text-primary" />
+                                </button>
+                                <button
+                                  onClick={handleCancelEdit}
+                                  className="p-1 hover:bg-muted rounded transition-all"
+                                >
+                                  <X className="w-3.5 h-3.5 text-muted-foreground" />
+                                </button>
+                              </>
+                            ) : (
+                              <>
+                                <button
+                                  onClick={(e) => handleStartEdit(conv.id, conv.title, e)}
+                                  className="opacity-0 group-hover:opacity-100 p-1 hover:bg-primary/10 rounded transition-all"
+                                >
+                                  <Pencil className="w-3.5 h-3.5 text-primary" />
+                                </button>
+                                <button
+                                  onClick={(e) => handleDeleteConversation(conv.id, e)}
+                                  className="opacity-0 group-hover:opacity-100 p-1 hover:bg-destructive/10 rounded transition-all"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5 text-destructive" />
+                                </button>
+                              </>
+                            )}
+                          </div>
                         </div>
                       </motion.button>
                     ))}
@@ -701,7 +777,7 @@ export default function AITreatmentPage() {
                       {conversations.map((conv) => (
                         <motion.button
                           key={conv.id}
-                          onClick={() => handleLoadConversation(conv.id)}
+                          onClick={() => editingConversationId !== conv.id && handleLoadConversation(conv.id)}
                           className={`w-full text-left p-3 rounded-lg transition-colors group ${
                             currentConversationId === conv.id 
                               ? 'bg-primary/10 border border-primary/20' 
@@ -711,19 +787,61 @@ export default function AITreatmentPage() {
                         >
                           <div className="flex items-start justify-between gap-2">
                             <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-foreground truncate">
-                                {conv.title}
-                              </p>
+                              {editingConversationId === conv.id ? (
+                                <input
+                                  type="text"
+                                  value={editTitle}
+                                  onChange={(e) => setEditTitle(e.target.value)}
+                                  onClick={(e) => e.stopPropagation()}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') handleSaveEdit(conv.id, e as unknown as React.MouseEvent);
+                                    if (e.key === 'Escape') handleCancelEdit(e as unknown as React.MouseEvent);
+                                  }}
+                                  className="w-full text-sm font-medium text-foreground bg-background border border-primary rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-primary"
+                                  autoFocus
+                                />
+                              ) : (
+                                <p className="text-sm font-medium text-foreground truncate">
+                                  {conv.title}
+                                </p>
+                              )}
                               <p className="text-xs text-muted-foreground mt-0.5">
                                 {new Date(conv.updated_at).toLocaleDateString()}
                               </p>
                             </div>
-                            <button
-                              onClick={(e) => handleDeleteConversation(conv.id, e)}
-                              className="p-1 hover:bg-destructive/10 rounded transition-all"
-                            >
-                              <Trash2 className="w-3.5 h-3.5 text-destructive" />
-                            </button>
+                            <div className="flex items-center gap-0.5">
+                              {editingConversationId === conv.id ? (
+                                <>
+                                  <button
+                                    onClick={(e) => handleSaveEdit(conv.id, e)}
+                                    className="p-1 hover:bg-primary/10 rounded transition-all"
+                                  >
+                                    <Check className="w-3.5 h-3.5 text-primary" />
+                                  </button>
+                                  <button
+                                    onClick={handleCancelEdit}
+                                    className="p-1 hover:bg-muted rounded transition-all"
+                                  >
+                                    <X className="w-3.5 h-3.5 text-muted-foreground" />
+                                  </button>
+                                </>
+                              ) : (
+                                <>
+                                  <button
+                                    onClick={(e) => handleStartEdit(conv.id, conv.title, e)}
+                                    className="p-1 hover:bg-primary/10 rounded transition-all"
+                                  >
+                                    <Pencil className="w-3.5 h-3.5 text-primary" />
+                                  </button>
+                                  <button
+                                    onClick={(e) => handleDeleteConversation(conv.id, e)}
+                                    className="p-1 hover:bg-destructive/10 rounded transition-all"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5 text-destructive" />
+                                  </button>
+                                </>
+                              )}
+                            </div>
                           </div>
                         </motion.button>
                       ))}
