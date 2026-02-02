@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Send, Mic, MicOff, Loader2, Sparkles, ImagePlus, X } from "lucide-react";
@@ -22,11 +22,18 @@ interface ChatInputProps {
 export function ChatInput({ onSendMessage, isLoading, disabled, creditsPerImage = 2, allowImageUpload = true }: ChatInputProps) {
   const [inputValue, setInputValue] = useState("");
   const [isListening, setIsListening] = useState(false);
+  const [interimTranscript, setInterimTranscript] = useState("");
   const [isFocused, setIsFocused] = useState(false);
   const [images, setImages] = useState<ImagePreview[]>([]);
   const [isProcessingImages, setIsProcessingImages] = useState(false);
+  const [audioLevel, setAudioLevel] = useState(0);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const recognitionRef = useRef<any>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const animationFrameRef = useRef<number | null>(null);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
   const { toast } = useToast();
 
   // Auto-resize textarea
@@ -148,46 +155,188 @@ export function ChatInput({ onSendMessage, isLoading, disabled, creditsPerImage 
     }
   };
 
-  const toggleVoiceInput = () => {
+  // Cleanup audio visualizer
+  const cleanupAudioVisualizer = useCallback(() => {
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+      animationFrameRef.current = null;
+    }
+    if (mediaStreamRef.current) {
+      mediaStreamRef.current.getTracks().forEach(track => track.stop());
+      mediaStreamRef.current = null;
+    }
+    if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
+      audioContextRef.current.close();
+      audioContextRef.current = null;
+    }
+    analyserRef.current = null;
+    setAudioLevel(0);
+  }, []);
+
+  // Setup audio visualizer for voice feedback
+  const setupAudioVisualizer = useCallback(async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaStreamRef.current = stream;
+      
+      audioContextRef.current = new AudioContext();
+      analyserRef.current = audioContextRef.current.createAnalyser();
+      analyserRef.current.fftSize = 256;
+      
+      const source = audioContextRef.current.createMediaStreamSource(stream);
+      source.connect(analyserRef.current);
+      
+      const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
+      
+      const updateLevel = () => {
+        if (!analyserRef.current || !isListening) return;
+        
+        analyserRef.current.getByteFrequencyData(dataArray);
+        const average = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
+        setAudioLevel(average / 255);
+        
+        animationFrameRef.current = requestAnimationFrame(updateLevel);
+      };
+      
+      updateLevel();
+    } catch (error) {
+      console.error('Audio visualizer setup failed:', error);
+    }
+  }, [isListening]);
+
+  // Stop voice recognition
+  const stopVoiceInput = useCallback(() => {
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+      recognitionRef.current = null;
+    }
+    cleanupAudioVisualizer();
+    setIsListening(false);
+    setInterimTranscript("");
+  }, [cleanupAudioVisualizer]);
+
+  // Start voice recognition
+  const startVoiceInput = useCallback(async () => {
     if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
       toast({
         title: "Not Supported",
-        description: "Voice input is not supported in your browser.",
+        description: "Voice input is not supported in your browser. Try Chrome or Edge.",
         variant: "destructive"
       });
       return;
     }
 
-    setIsListening(!isListening);
-    
-    if (!isListening) {
+    try {
+      // Request microphone permission first
+      await navigator.mediaDevices.getUserMedia({ audio: true });
+      
       const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
       const recognition = new SpeechRecognition();
-      recognition.continuous = false;
-      recognition.interimResults = false;
       
-      recognition.onresult = (event: any) => {
-        const transcript = event.results[0][0].transcript;
-        setInputValue(prev => prev + transcript);
-        setIsListening(false);
-      };
+      // Enhanced settings for better range
+      recognition.continuous = true; // Keep listening until manually stopped
+      recognition.interimResults = true; // Show real-time transcription
+      recognition.maxAlternatives = 1;
+      recognition.lang = navigator.language || 'en-US'; // Use browser language
       
-      recognition.onerror = () => {
-        setIsListening(false);
+      recognition.onstart = () => {
+        setIsListening(true);
+        setupAudioVisualizer();
         toast({
-          title: "Voice Error",
-          description: "Could not recognize speech. Please try again.",
-          variant: "destructive"
+          title: "🎤 Listening...",
+          description: "Speak naturally. Tap the mic again to stop.",
         });
       };
       
-      recognition.onend = () => {
-        setIsListening(false);
+      recognition.onresult = (event: any) => {
+        let finalTranscript = '';
+        let interimText = '';
+        
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const transcript = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            finalTranscript += transcript;
+          } else {
+            interimText += transcript;
+          }
+        }
+        
+        if (finalTranscript) {
+          setInputValue(prev => prev + (prev ? ' ' : '') + finalTranscript);
+          setInterimTranscript("");
+        } else {
+          setInterimTranscript(interimText);
+        }
       };
       
+      recognition.onerror = (event: any) => {
+        console.error('Speech recognition error:', event.error);
+        
+        if (event.error === 'no-speech') {
+          toast({
+            title: "No Speech Detected",
+            description: "Please speak louder or closer to the microphone.",
+            variant: "destructive"
+          });
+        } else if (event.error === 'audio-capture') {
+          toast({
+            title: "Microphone Error",
+            description: "Could not access microphone. Check permissions.",
+            variant: "destructive"
+          });
+        } else if (event.error !== 'aborted') {
+          toast({
+            title: "Voice Error",
+            description: "Speech recognition failed. Please try again.",
+            variant: "destructive"
+          });
+        }
+        
+        stopVoiceInput();
+      };
+      
+      recognition.onend = () => {
+        // Auto-restart if still in listening mode (for continuous recognition)
+        if (isListening && recognitionRef.current) {
+          try {
+            recognition.start();
+          } catch (e) {
+            stopVoiceInput();
+          }
+        } else {
+          stopVoiceInput();
+        }
+      };
+      
+      recognitionRef.current = recognition;
       recognition.start();
+      
+    } catch (error) {
+      toast({
+        title: "Microphone Access Required",
+        description: "Please allow microphone access to use voice input.",
+        variant: "destructive"
+      });
     }
-  };
+  }, [toast, setupAudioVisualizer, stopVoiceInput, isListening]);
+
+  const toggleVoiceInput = useCallback(() => {
+    if (isListening) {
+      stopVoiceInput();
+    } else {
+      startVoiceInput();
+    }
+  }, [isListening, startVoiceInput, stopVoiceInput]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+      cleanupAudioVisualizer();
+    };
+  }, [cleanupAudioVisualizer]);
 
   const totalCreditsNeeded = images.length * creditsPerImage;
 
@@ -198,6 +347,53 @@ export function ChatInput({ onSendMessage, isLoading, disabled, creditsPerImage 
       className="border-t border-border bg-card/80 backdrop-blur-xl px-3 sm:px-4 py-3 sm:py-4"
     >
       <div className="container mx-auto max-w-3xl">
+        {/* Voice Recording Indicator */}
+        <AnimatePresence>
+          {isListening && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="mb-3"
+            >
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-primary/10 border border-primary/20">
+                {/* Audio Level Bars */}
+                <div className="flex items-center gap-0.5 h-6">
+                  {[...Array(5)].map((_, i) => (
+                    <motion.div
+                      key={i}
+                      className="w-1 bg-primary rounded-full"
+                      animate={{
+                        height: audioLevel > (i * 0.2) ? Math.max(8, audioLevel * 24) : 4,
+                      }}
+                      transition={{ duration: 0.1 }}
+                    />
+                  ))}
+                </div>
+                
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-primary">Listening...</p>
+                  {interimTranscript && (
+                    <p className="text-xs text-muted-foreground truncate italic">
+                      "{interimTranscript}"
+                    </p>
+                  )}
+                </div>
+                
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={toggleVoiceInput}
+                  className="text-primary hover:bg-primary/20"
+                >
+                  Stop
+                </Button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Image Previews */}
         <AnimatePresence>
           {images.length > 0 && (
@@ -299,15 +495,30 @@ export function ChatInput({ onSendMessage, isLoading, disabled, creditsPerImage 
               )}
 
               {/* Voice Button */}
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="relative">
+                {/* Audio level ring indicator */}
+                {isListening && (
+                  <motion.div
+                    className="absolute inset-0 rounded-xl border-2 border-primary"
+                    animate={{
+                      scale: [1, 1.1 + audioLevel * 0.3, 1],
+                      opacity: [0.8, 0.4, 0.8],
+                    }}
+                    transition={{
+                      duration: 0.8,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                    }}
+                  />
+                )}
                 <Button
                   type="button"
                   variant="ghost"
                   size="icon"
                   onClick={toggleVoiceInput}
-                  className={`h-8 w-8 sm:h-9 sm:w-9 rounded-xl transition-all ${
+                  className={`h-8 w-8 sm:h-9 sm:w-9 rounded-xl transition-all relative z-10 ${
                     isListening 
-                      ? "bg-primary text-primary-foreground animate-pulse" 
+                      ? "bg-primary text-primary-foreground" 
                       : "text-muted-foreground hover:text-primary hover:bg-primary/10"
                   }`}
                   aria-label={isListening ? "Stop listening" : "Start voice input"}
@@ -317,7 +528,8 @@ export function ChatInput({ onSendMessage, isLoading, disabled, creditsPerImage 
                       <motion.div
                         key="mic-off"
                         initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
+                        animate={{ scale: [1, 1.1, 1] }}
+                        transition={{ duration: 0.5, repeat: Infinity }}
                         exit={{ scale: 0 }}
                       >
                         <MicOff className="w-4 h-4" />
