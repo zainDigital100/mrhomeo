@@ -539,7 +539,7 @@ export default function AITreatmentPage() {
                         <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
                       </span>
                       <p className="text-xs sm:text-sm text-muted-foreground">
-                        Online {user && "• Image Analysis"}
+                        Testing phase {user && "• Image Analysis"}
                       </p>
                     </div>
                   </div>
