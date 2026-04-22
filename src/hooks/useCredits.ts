@@ -3,13 +3,24 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
 const ANONYMOUS_CREDITS_KEY = 'mr_homeo_anonymous_credits';
-const ANONYMOUS_MAX_CREDITS = 5;
-const SIGNED_IN_CREDITS = 20;
+const ANONYMOUS_CREDITS_RESET_KEY = 'mr_homeo_anonymous_credits_reset';
+const ANONYMOUS_MAX_CREDITS = 15;
+const SIGNED_IN_CREDITS = 40;
+
+const getMonthKey = (): string => {
+  const now = new Date();
+  return `${now.getFullYear()}-${now.getMonth()}`;
+};
 
 const getAnonymousCredits = (): number => {
+  const currentMonth = getMonthKey();
+  const lastReset = localStorage.getItem(ANONYMOUS_CREDITS_RESET_KEY);
   const stored = localStorage.getItem(ANONYMOUS_CREDITS_KEY);
-  if (stored === null) {
+
+  // Reset monthly or initialize
+  if (stored === null || lastReset !== currentMonth) {
     localStorage.setItem(ANONYMOUS_CREDITS_KEY, String(ANONYMOUS_MAX_CREDITS));
+    localStorage.setItem(ANONYMOUS_CREDITS_RESET_KEY, currentMonth);
     return ANONYMOUS_MAX_CREDITS;
   }
   return parseInt(stored, 10);
@@ -46,12 +57,16 @@ export const useCredits = () => {
       }
 
       if (!data) {
-        // No credits record exists, create one with 30 credits
+        // No credits record exists, create one with default credits
         const { data: newData, error: insertError } = await supabase
           .from('user_credits')
           .insert({ user_id: user.id, credits: SIGNED_IN_CREDITS })
           .select('credits')
           .single();
+
+        if (!insertError && newData) {
+          setCredits(newData.credits);
+        }
 
         if (!insertError && newData) {
           setCredits(newData.credits);

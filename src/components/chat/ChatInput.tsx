@@ -34,6 +34,8 @@ export function ChatInput({ onSendMessage, isLoading, disabled, creditsPerImage 
   const analyserRef = useRef<AnalyserNode | null>(null);
   const animationFrameRef = useRef<number | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
+  const isListeningRef = useRef(false);
+  const shouldKeepListeningRef = useRef(false);
   const { toast } = useToast();
 
   // Auto-resize textarea
@@ -176,38 +178,56 @@ export function ChatInput({ onSendMessage, isLoading, disabled, creditsPerImage 
   // Setup audio visualizer for voice feedback
   const setupAudioVisualizer = useCallback(async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+        },
+      });
       mediaStreamRef.current = stream;
-      
+
       audioContextRef.current = new AudioContext();
       analyserRef.current = audioContextRef.current.createAnalyser();
-      analyserRef.current.fftSize = 256;
-      
+      analyserRef.current.fftSize = 512;
+      analyserRef.current.smoothingTimeConstant = 0.7;
+
       const source = audioContextRef.current.createMediaStreamSource(stream);
       source.connect(analyserRef.current);
-      
+
       const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
-      
+
       const updateLevel = () => {
-        if (!analyserRef.current || !isListening) return;
-        
+        if (!analyserRef.current || !isListeningRef.current) return;
+
         analyserRef.current.getByteFrequencyData(dataArray);
-        const average = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
-        setAudioLevel(average / 255);
-        
+        // Focus on speech frequency range for better sensitivity
+        const speechRange = dataArray.slice(2, 64);
+        const average = speechRange.reduce((a, b) => a + b, 0) / speechRange.length;
+        // Boost low signals for better visualization of distant voices
+        const boosted = Math.min(1, (average / 255) * 2.2);
+        setAudioLevel(boosted);
+
         animationFrameRef.current = requestAnimationFrame(updateLevel);
       };
-      
+
       updateLevel();
     } catch (error) {
       console.error('Audio visualizer setup failed:', error);
     }
-  }, [isListening]);
+  }, []);
 
   // Stop voice recognition
   const stopVoiceInput = useCallback(() => {
+    shouldKeepListeningRef.current = false;
+    isListeningRef.current = false;
     if (recognitionRef.current) {
-      recognitionRef.current.stop();
+      try {
+        recognitionRef.current.onend = null;
+        recognitionRef.current.stop();
+      } catch (e) {
+        // ignore
+      }
       recognitionRef.current = null;
     }
     cleanupAudioVisualizer();
@@ -227,31 +247,27 @@ export function ChatInput({ onSendMessage, isLoading, disabled, creditsPerImage 
     }
 
     try {
-      // Request microphone permission first
-      await navigator.mediaDevices.getUserMedia({ audio: true });
-      
       const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
       const recognition = new SpeechRecognition();
-      
-      // Enhanced settings for better range
-      recognition.continuous = true; // Keep listening until manually stopped
-      recognition.interimResults = true; // Show real-time transcription
-      recognition.maxAlternatives = 1;
-      recognition.lang = navigator.language || 'en-US'; // Use browser language
-      
+
+      // Enhanced settings for better range and accuracy
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.maxAlternatives = 3;
+      recognition.lang = navigator.language || 'en-US';
+
+      shouldKeepListeningRef.current = true;
+      isListeningRef.current = true;
+
       recognition.onstart = () => {
         setIsListening(true);
         setupAudioVisualizer();
-        toast({
-          title: "🎤 Listening...",
-          description: "Speak naturally. Tap the mic again to stop.",
-        });
       };
-      
+
       recognition.onresult = (event: any) => {
         let finalTranscript = '';
         let interimText = '';
-        
+
         for (let i = event.resultIndex; i < event.results.length; i++) {
           const transcript = event.results[i][0].transcript;
           if (event.results[i].isFinal) {
@@ -260,65 +276,84 @@ export function ChatInput({ onSendMessage, isLoading, disabled, creditsPerImage 
             interimText += transcript;
           }
         }
-        
+
         if (finalTranscript) {
-          setInputValue(prev => prev + (prev ? ' ' : '') + finalTranscript);
+          setInputValue(prev => {
+            const trimmed = finalTranscript.trim();
+            if (!trimmed) return prev;
+            return prev + (prev && !prev.endsWith(' ') ? ' ' : '') + trimmed;
+          });
           setInterimTranscript("");
-        } else {
+        } else if (interimText) {
           setInterimTranscript(interimText);
         }
       };
-      
+
       recognition.onerror = (event: any) => {
         console.error('Speech recognition error:', event.error);
-        
+
         if (event.error === 'no-speech') {
-          toast({
-            title: "No Speech Detected",
-            description: "Please speak louder or closer to the microphone.",
-            variant: "destructive"
-          });
-        } else if (event.error === 'audio-capture') {
+          // Silent - just keep listening
+          return;
+        }
+
+        if (event.error === 'audio-capture') {
           toast({
             title: "Microphone Error",
             description: "Could not access microphone. Check permissions.",
             variant: "destructive"
           });
-        } else if (event.error !== 'aborted') {
+          stopVoiceInput();
+        } else if (event.error === 'not-allowed') {
           toast({
-            title: "Voice Error",
-            description: "Speech recognition failed. Please try again.",
+            title: "Microphone Access Required",
+            description: "Please allow microphone access to use voice input.",
             variant: "destructive"
           });
+          stopVoiceInput();
+        } else if (event.error === 'network') {
+          toast({
+            title: "Network Error",
+            description: "Voice recognition needs an internet connection.",
+            variant: "destructive"
+          });
+          stopVoiceInput();
+        } else if (event.error !== 'aborted') {
+          // For other transient errors, let onend handle restart
+          console.warn('Transient voice error:', event.error);
         }
-        
-        stopVoiceInput();
       };
-      
+
       recognition.onend = () => {
-        // Auto-restart if still in listening mode (for continuous recognition)
-        if (isListening && recognitionRef.current) {
+        // Auto-restart if user hasn't manually stopped
+        if (shouldKeepListeningRef.current && recognitionRef.current === recognition) {
           try {
             recognition.start();
           } catch (e) {
+            // Already started or failed - clean up
             stopVoiceInput();
           }
-        } else {
-          stopVoiceInput();
         }
       };
-      
+
       recognitionRef.current = recognition;
       recognition.start();
-      
+
+      toast({
+        title: "🎤 Listening...",
+        description: "Speak naturally — I'll keep listening until you tap stop.",
+      });
+
     } catch (error) {
+      shouldKeepListeningRef.current = false;
+      isListeningRef.current = false;
       toast({
         title: "Microphone Access Required",
         description: "Please allow microphone access to use voice input.",
         variant: "destructive"
       });
     }
-  }, [toast, setupAudioVisualizer, stopVoiceInput, isListening]);
+  }, [toast, setupAudioVisualizer, stopVoiceInput]);
 
   const toggleVoiceInput = useCallback(() => {
     if (isListening) {
