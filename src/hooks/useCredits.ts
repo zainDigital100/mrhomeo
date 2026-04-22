@@ -13,9 +13,14 @@ const getMonthKey = (): string => {
 };
 
 const getAnonymousCredits = (): number => {
+  const currentMonth = getMonthKey();
+  const lastReset = localStorage.getItem(ANONYMOUS_CREDITS_RESET_KEY);
   const stored = localStorage.getItem(ANONYMOUS_CREDITS_KEY);
-  if (stored === null) {
+
+  // Reset monthly or initialize
+  if (stored === null || lastReset !== currentMonth) {
     localStorage.setItem(ANONYMOUS_CREDITS_KEY, String(ANONYMOUS_MAX_CREDITS));
+    localStorage.setItem(ANONYMOUS_CREDITS_RESET_KEY, currentMonth);
     return ANONYMOUS_MAX_CREDITS;
   }
   return parseInt(stored, 10);
