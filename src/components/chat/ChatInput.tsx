@@ -34,6 +34,8 @@ export function ChatInput({ onSendMessage, isLoading, disabled, creditsPerImage 
   const analyserRef = useRef<AnalyserNode | null>(null);
   const animationFrameRef = useRef<number | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
+  const isListeningRef = useRef(false);
+  const shouldKeepListeningRef = useRef(false);
   const { toast } = useToast();
 
   // Auto-resize textarea
