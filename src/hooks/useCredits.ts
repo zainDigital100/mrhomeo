@@ -57,12 +57,16 @@ export const useCredits = () => {
       }
 
       if (!data) {
-        // No credits record exists, create one with 30 credits
+        // No credits record exists, create one with default credits
         const { data: newData, error: insertError } = await supabase
           .from('user_credits')
           .insert({ user_id: user.id, credits: SIGNED_IN_CREDITS })
           .select('credits')
           .single();
+
+        if (!insertError && newData) {
+          setCredits(newData.credits);
+        }
 
         if (!insertError && newData) {
           setCredits(newData.credits);
